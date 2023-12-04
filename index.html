@@ -5,6 +5,40 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
+    <style>
+      #studentForm {
+        display: none;
+        margin-top: 20px;
+      }
+
+      .action-buttons {
+        display: none;
+        margin-top: 10px;
+      }
+
+      #deleteModal {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: #fff;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+      }
+      #addModal {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: #fff;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+      }
+    </style>
   </head>
 
   <body>
@@ -14,12 +48,44 @@
     <button id="writeButton">Write</button>
     <button id="makeReadOnlyButton">Make Read-Only</button>
 
+    <div id="studentForm">
+      <label for="studentName">Enter student name:</label>
+      <input type="text" id="studentName" name="studentName" required />
+      <button type="button" onclick="submitForm()">Submit</button>
+    </div>
+
+    <div id="actionButtons" class="action-buttons">
+      <button id="addButton" onclick="addAction()">Add</button>
+      <button id="deleteButton" onclick="deleteAction()">Delete</button>
+    </div>
+
+    <div id="deleteModal">
+      <label for="password">Enter password:</label>
+      <input type="password" id="password" name="password" required />
+      <button type="button" onclick="deleteConfirmation()">
+        Confirm Delete
+      </button>
+      <button type="button" onclick="closeDeleteModal()">Cancel</button>
+    </div>
+
+    <div id="addModal">
+      <label>Scan your card</label>
+      <button type="button" onclick="closeAddModal()">Cancel</button>
+    </div>
+
+    <h3>Live Output</h3>
+    <div id="output" class="output">
+      <div id="content"></div>
+      <div id="status"></div>
+      <pre id="log"></pre>
+    </div>
+
     <script src="https://www.gstatic.com/firebasejs/7.24.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/7.24.0/firebase-database.js"></script>
 
     <script>
       var firebaseConfig = {
-        apiKey: "AIzaSyAkQXsSCrt3uzoUjX_FMokg_ZL3bE4CoYA",
+        apiKey: "YOUR_API_KEY",
         authDomain: "olevels-live.firebaseapp.com",
         projectId: "olevels-live",
         storageBucket: "olevels-live.appspot.com",
@@ -56,16 +122,7 @@
           content.appendChild(newContent);
         },
       };
-    </script>
 
-    <h3>Live Output</h3>
-    <div id="output" class="output">
-      <div id="content"></div>
-      <div id="status"></div>
-      <pre id="log"></pre>
-    </div>
-
-    <script>
       log = ChromeSamples.log;
 
       if (!("NDEFReader" in window))
@@ -73,12 +130,13 @@
           "Web NFC is not available. Use Chrome on Android."
         );
 
+      var studentName;
       scanButton.addEventListener("click", async () => {
         log("User clicked scan button");
 
         try {
           const ndef = new NDEFReader();
-          await ndef.scan();
+          ndef.scan();
           log("> Scan started");
 
           ndef.addEventListener("readingerror", () => {
@@ -88,96 +146,223 @@
           ndef.addEventListener("reading", ({ message, serialNumber }) => {
             log(`> Serial Number: ${serialNumber}`);
             log(`> Records: (${message.records.length})`);
+
+            if (message.records.length > 0) {
+              log("Records:");
+              message.records.forEach((record, index) => {
+                const textContent = new TextDecoder().decode(record.data);
+                log(`Record ${index + 1}: ${textContent}`);
+              });
+            }
+
+            clearTimeout(timerId);
+            ndef.stop();
           });
         } catch (error) {
           log("Argh! " + error);
         }
       });
 
-      writeButton.addEventListener("click", async () => {
-        try {
-          const database = firebase.database();
-          const studentsRef = database.ref("students");
-          const studentName = prompt("Enter student name:");
-
-          if (studentName) {
-            studentsRef
-              .child(studentName)
-              .once("value")
-              .then(async (snapshot) => {
-                if (snapshot.exists()) {
-                  log(
-                    `Student with name '${studentName}' found in the database.`
-                  );
-
-                  // Retrieve existing data
-                  const existingData = snapshot.val();
-
-                  // Check if uniqueNumber and serialNumber already exist
-                  if (
-                    !existingData.uniqueNumber &&
-                    !existingData.serialNumber
-                  ) {
-                    // Generate new unique number and NFC serial number
-                    const uniqueNumber =
-                      Date.now() + Math.floor(Math.random() * 1000);
-                    const nfcSerialNumber = await getNFCSerialNumber();
-                    log(nfcSerialNumber);
-
-                    // Update existing data with new information
-                    studentsRef.child(studentName).update({
-                      uniqueNumber: uniqueNumber,
-                      serialNumber: nfcSerialNumber,
-                    });
-                    const ndef = new NDEFReader();
-
-                    try {
-  await ndef.write(`Unique Number: ${uniqueNumber}, Student Name: ${studentName}`);
-  log("Message written successfully.");
-  log(`Data updated for student: ${studentName}, Unique Number: ${uniqueNumber}`);
-} catch (error) {
-  log(`Write failed: ${error}`);
-}
-                  } else {
-                    log(
-                      `Student with name '${studentName}' already has uniqueNumber and serialNumber.`
-                    );
-                  }
-                } else {
-                  log(`Student with name '${studentName}' not found.`);
-                }
-              })
-              .catch((error) => {
-                log("Error checking student name:", error.message);
-              });
-          } else {
-            log("User did not provide a name.");
-          }
-        } catch (error) {
-          log("Argh! " + error);
-        }
+      document.getElementById("writeButton").addEventListener("click", () => {
+        document.getElementById("studentForm").style.display = "block";
+        document.getElementById("actionButtons").style.display = "none";
       });
 
-      async function writeNFCData(data) {
-        try {
-          const ndef = new NDEFWriter();
-          const records = [NDEFRecord.text(data)];
+      function submitForm() {
+  try {
+    const database = firebase.database();
+    const studentsRef = database.ref("students");
+    const studentNameInput = document.getElementById("studentName");
+    studentName = studentNameInput.value;
 
-          await ndef.write({ records });
+    if (studentName) {
+      studentsRef
+        .child(studentName)
+        .once("value")
+        .then(async (snapshot) => {
+          if (snapshot.exists()) {
+            const existingData = snapshot.val();
 
-          log(`NFC data written: ${data}`);
-        } catch (error) {
-          log("Argh! " + error);
+            if (existingData.serialNumber && existingData.uniqueNumber) {
+              log(`User with name '${studentName}' has already registered with NFC.`);
+            } else {
+              log(`User with name '${studentName}' is not registered with NFC.`);
+              document.getElementById("actionButtons").style.display = "block";
+            }
+          } else {
+            log(`User with name '${studentName}' not found in the database.`);
+          }
+        })
+        .catch((error) => {
+          log("Error checking student name:", error.message);
+        });
+    } else {
+      log("User did not provide a name.");
+    }
+  } catch (error) {
+    log("Argh! " + error);
+  }
+}
+
+      async function addAction() {
+        const studentName = document.getElementById("studentName").value;
+        log(studentName);
+
+        if (!("NDEFReader" in window)) {
+          alert("Web NFC is not available. Use Chrome on Android.");
+        } else {
+          document.getElementById("addModal").style.display = "block";
+          try {
+            const ndef = new NDEFReader();
+            await ndef.scan();
+            document.getElementById("addModal").style.display = "none";
+            log("> Scan started");
+
+            ndef.addEventListener("readingerror", () => {
+              log("Argh! Cannot read data from the NFC tag. Try another one?");
+            });
+
+            ndef.addEventListener(
+              "reading",
+              async ({ message, serialNumber }) => {
+                log(`> Serial Number: ${serialNumber}`);
+
+                const database = firebase.database();
+                const studentsRef = database.ref("students");
+
+                try {
+                  const snapshot = await studentsRef
+                    .child(studentName)
+                    .once("value");
+
+                  if (snapshot.exists()) {
+                    const existingData = snapshot.val();
+
+                    if (
+                      !existingData.uniqueNumber &&
+                      !existingData.serialNumber
+                    ) {
+                      const uniqueNumber =
+                        Date.now() + Math.floor(Math.random() * 1000);
+                      const nfcSerialNumber = serialNumber;
+
+                      try {
+                        const ndefWrite = new NDEFReader();
+                        await ndefWrite.write(
+                          `Unique Number: ${uniqueNumber}, Student Name: ${studentName}`
+                        );
+                        log("Message written successfully.");
+                        log(
+                          `Data updated for student: ${studentName}, Unique Number: ${uniqueNumber}`
+                        );
+                        document.getElementById("addModal").style.display =
+                          "none";
+                        await studentsRef.child(studentName).update({
+                          uniqueNumber: uniqueNumber,
+                          serialNumber: nfcSerialNumber,
+                        });
+                      } catch (error) {
+                        log(`Write failed: ${error}`);
+                        document.getElementById("addModal").style.display =
+                          "none";
+                      }
+                    } else {
+                      alert(
+                        `Student with name '${studentName}' already has uniqueNumber and serialNumber.`
+                      );
+                      document.getElementById("addModal").style.display =
+                        "none";
+                    }
+                  } else {
+                    alert(`Student with name '${studentName}' not found.`);
+                    document.getElementById("addModal").style.display = "none";
+                  }
+                } catch (error) {
+                  log("Error checking student name:", error.message);
+                }
+              }
+            );
+          } catch (error) {
+            log("Argh! " + error);
+            document.getElementById("addModal").style.display = "none";
+          }
         }
+      }
+
+      function deleteAction() {
+        const studentName = document.getElementById("studentName").value;
+        log(studentName);
+        document.getElementById("deleteModal").style.display = "block";
+      }
+
+      async function deleteConfirmation() {
+        const passwordInput = document.getElementById("password");
+        const password = passwordInput.value;
+
+        if (password === "password") {
+          const studentName = document.getElementById("studentName").value;
+
+          if (studentName) {
+            const database = firebase.database();
+            const studentsRef = database.ref("students");
+
+            try {
+              const studentSnapshot = await studentsRef
+                .child(studentName)
+                .once("value");
+
+              if (studentSnapshot.exists()) {
+                const studentData = studentSnapshot.val();
+                if (studentData.serialNumber && studentData.uniqueNumber) {
+                  const serialNumber = studentData.serialNumber;
+                  const uniqueNumber = studentData.uniqueNumber;
+
+                  await studentsRef.child(studentName).update({
+                    serialNumber: null,
+                    uniqueNumber: null,
+                  });
+
+                  log(
+                    `Serial Number and Unique Number for student '${studentName}' deleted from the database.`
+                  );
+                  closeDeleteModal();
+                } else {
+                  log("Student NFC is not register");
+                  closeDeleteModal();
+                }
+              } else {
+                log(`No student found with Name '${studentName}'.`);
+                closeDeleteModal();
+              }
+            } catch (error) {
+              log(`Error deleting student: ${error.message}`);
+            }
+
+            closeDeleteModal();
+          } else {
+            log("Student Name not found. Delete operation canceled.");
+            closeDeleteModal();
+          }
+        } else {
+          log("Incorrect password. Delete operation canceled.");
+          closeDeleteModal();
+        }
+      }
+
+      function closeDeleteModal() {
+        document.getElementById("deleteModal").style.display = "none";
+      }
+
+      function closeAddModal() {
+        document.getElementById("addModal").style.display = "none";
       }
 
       async function getNFCSerialNumber() {
         return new Promise((resolve, reject) => {
           const ndef = new NDEFReader();
           ndef.scan();
-          ndef.addEventListener("reading", ({ message, serialNumber }) => {
+          ndef.addEventListener("reading", ({ serialNumber }) => {
             log(`> Serial Number: ${serialNumber}`);
-            log(`> Records: (${message.records.length})`);
             resolve(serialNumber);
           });
           setTimeout(() => {

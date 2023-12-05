@@ -174,20 +174,22 @@
     const studentsRef = database.ref("students");
     const studentNameInput = document.getElementById("studentName");
     studentName = studentNameInput.value;
-
+    
     if (studentName) {
+
       studentsRef
         .child(studentName)
         .once("value")
         .then(async (snapshot) => {
           if (snapshot.exists()) {
             const existingData = snapshot.val();
-
+document.getElementById("actionButtons").style.display = "block";
             if (existingData.serialNumber && existingData.uniqueNumber) {
               log(`User with name '${studentName}' has already registered with NFC.`);
+              document.getElementById("addButton").style.display = "none";
             } else {
               log(`User with name '${studentName}' is not registered with NFC.`);
-              document.getElementById("actionButtons").style.display = "block";
+              document.getElementById("deleteButton").style.display = "none";
             }
           } else {
             log(`User with name '${studentName}' not found in the database.`);
@@ -196,10 +198,14 @@
         .catch((error) => {
           log("Error checking student name:", error.message);
         });
-    } else {
+    } 
+    
+    else {
       log("User did not provide a name.");
     }
-  } catch (error) {
+  } 
+  
+  catch (error) {
     log("Argh! " + error);
   }
 }
@@ -251,31 +257,27 @@
                         await ndefWrite.write(
                           `Unique Number: ${uniqueNumber}, Student Name: ${studentName}`
                         );
+                        await ndefWrite.write({
+    records: [{ recordType: "url", data: `http://localhost:4200/coins-history/student/Bio-B3/${studentName}` }],
+  });
                         log("Message written successfully.");
                         log(
                           `Data updated for student: ${studentName}, Unique Number: ${uniqueNumber}`
                         );
-                        document.getElementById("addModal").style.display =
-                          "none";
                         await studentsRef.child(studentName).update({
                           uniqueNumber: uniqueNumber,
                           serialNumber: nfcSerialNumber,
                         });
                       } catch (error) {
                         log(`Write failed: ${error}`);
-                        document.getElementById("addModal").style.display =
-                          "none";
                       }
                     } else {
                       alert(
                         `Student with name '${studentName}' already has uniqueNumber and serialNumber.`
                       );
-                      document.getElementById("addModal").style.display =
-                        "none";
                     }
                   } else {
                     alert(`Student with name '${studentName}' not found.`);
-                    document.getElementById("addModal").style.display = "none";
                   }
                 } catch (error) {
                   log("Error checking student name:", error.message);

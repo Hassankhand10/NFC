@@ -169,46 +169,46 @@
       });
 
       function submitForm() {
-  try {
-    const database = firebase.database();
-    const studentsRef = database.ref("students");
-    const studentNameInput = document.getElementById("studentName");
-    studentName = studentNameInput.value;
-    
-    if (studentName) {
+        try {
+          const database = firebase.database();
+          const studentsRef = database.ref("students");
+          const studentNameInput = document.getElementById("studentName");
+          studentName = studentNameInput.value;
 
-      studentsRef
-        .child(studentName)
-        .once("value")
-        .then(async (snapshot) => {
-          if (snapshot.exists()) {
-            const existingData = snapshot.val();
-document.getElementById("actionButtons").style.display = "block";
-            if (existingData.serialNumber && existingData.uniqueNumber) {
-              log(`User with name '${studentName}' has already registered with NFC.`);
-              document.getElementById("addButton").style.display = "none";
-            } else {
-              log(`User with name '${studentName}' is not registered with NFC.`);
-              document.getElementById("deleteButton").style.display = "none";
-            }
+          if (studentName) {
+            studentsRef
+              .child(studentName)
+              .once("value")
+              .then(async (snapshot) => {
+                if (snapshot.exists()) {
+                  const existingData = snapshot.val();
+                  document.getElementById("actionButtons").style.display =
+                    "block";
+                  if (existingData.serialNumber && existingData.uniqueNumber) {
+                    log(
+                      `User with name '${studentName}' has already registered with NFC.`
+                    );
+                  } else {
+                    log(
+                      `User with name '${studentName}' is not registered with NFC.`
+                    );
+                  }
+                } else {
+                  log(
+                    `User with name '${studentName}' not found in the database.`
+                  );
+                }
+              })
+              .catch((error) => {
+                log("Error checking student name:", error.message);
+              });
           } else {
-            log(`User with name '${studentName}' not found in the database.`);
+            log("User did not provide a name.");
           }
-        })
-        .catch((error) => {
-          log("Error checking student name:", error.message);
-        });
-    } 
-    
-    else {
-      log("User did not provide a name.");
-    }
-  } 
-  
-  catch (error) {
-    log("Argh! " + error);
-  }
-}
+        } catch (error) {
+          log("Argh! " + error);
+        }
+      }
 
       async function addAction() {
         const studentName = document.getElementById("studentName").value;
@@ -254,12 +254,11 @@ document.getElementById("actionButtons").style.display = "block";
 
                       try {
                         const ndefWrite = new NDEFReader();
-                        await ndefWrite.write(
-                          `Unique Number: ${uniqueNumber}, Student Name: ${studentName}`
-                        );
-                        await ndefWrite.write({
-    records: [{ recordType: "url", data: `http://localhost:4200/coins-history/student/Bio-B3/${studentName}` }],
-  });
+                      
+                          await ndefWrite.write(
+                            `Unique Number: ${uniqueNumber}, Student Name: ${studentName}, URL: http://10.171.171.52:4200/coins-history/student/Bio-B3/${studentName}`
+                            );
+                          
                         log("Message written successfully.");
                         log(
                           `Data updated for student: ${studentName}, Unique Number: ${uniqueNumber}`

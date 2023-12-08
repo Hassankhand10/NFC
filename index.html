@@ -85,7 +85,7 @@
 
     <script>
       var firebaseConfig = {
-        apiKey: "YOUR_API_KEY",
+        apiKey: "AIzaSyAkQXsSCrt3uzoUjX_FMokg_ZL3bE4CoYA",
         authDomain: "olevels-live.firebaseapp.com",
         projectId: "olevels-live",
         storageBucket: "olevels-live.appspot.com",
@@ -254,14 +254,15 @@
 
                       try {
                         const ndefWrite = new NDEFReader();
-                      
+                        const encodedStudentName = encodeURIComponent(studentName)
+                        log(encodedStudentName)
                           await ndefWrite.write(
-                            `Unique Number: ${uniqueNumber}, Student Name: ${studentName}, URL: http://10.171.171.52:4200/coins-history/student/Bio-B3/${studentName}`
+                            `Unique Number: ${uniqueNumber}, Student Name: ${studentName}, URL: http://192.168.0.111:4200/coins-history/student/Bio-B3/${encodedStudentName}/${uniqueNumber}`
                             );
                           
                         log("Message written successfully.");
                         log(
-                          `Data updated for student: ${studentName}, Unique Number: ${uniqueNumber}`
+                          `Data updated for student: ${studentName}`
                         );
                         await studentsRef.child(studentName).update({
                           uniqueNumber: uniqueNumber,

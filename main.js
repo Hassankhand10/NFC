@@ -257,6 +257,10 @@ var ChromeSamples = {
     document.getElementById("deleteModal").style.display = "none";
   }
 
+  function openCricketGround() {
+    window.open('cricket-ground.html', '_blank');
+  }
+
   function closeAddModal() {
     document.getElementById("addModal").style.display = "none";
   }
@@ -286,3 +290,4 @@ var ChromeSamples = {
       log("Argh! " + error);
     }
   });
+

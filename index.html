@@ -51,9 +51,18 @@
   <button id="cricketGroundButton" onclick="openCricketGround()">Cricket Ground</button>
   <button id="playGroundButton" onclick="openPlayGround()">Play ground</button>
   <button id="bigSlideButton"  onclick="openBigSlide()">Big Slide</button>
-  <button id="button4">Swimming Pool</button>
-  <button id="button5">Racing Car</button>
+  <button id="swimmingPoolButton" onclick="openSwimmingPool()">Swimming Pool</button>
+  <button id="racingCarButton"  onclick="openRacingCar()">Racing Car</button>
 </div>
+
+<h3>Set Coins For Activity</h3>
+  <div>
+    <button onclick="setCoins('Cricket Ground')">Cricket Ground</button>
+    <button onclick="setCoins('Play ground')">Play ground</button>
+    <button onclick="setCoins('Big Slide')">Big Slide</button>
+    <button onclick="setCoins('Swimming Pool')">Swimming Pool</button>
+    <button onclick="setCoins('Racing Car')">Racing Car</button>
+  </div>
     <script src="https://www.gstatic.com/firebasejs/7.24.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/7.24.0/firebase-database.js"></script>
     <script src="constants.js"></script>

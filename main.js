@@ -269,7 +269,40 @@ var ChromeSamples = {
     window.open('big-slide.html', '_blank');
   }
 
+  function openSwimmingPool() {
+    window.open('swimming-pool.html', '_blank');
+  }
+
+  function openRacingCar() {
+    window.open('racing-car.html', '_blank');
+  }
+
+  function setCoins(activityName) {
   
+    const password = prompt('Enter your password:'); 
+  
+    if (password === 'password') {
+      const coinsForActivity = prompt(`Enter coins for ${activityName}:`);
+  
+      setCoinsInFirebase(activityName, coinsForActivity);
+    } else {
+      alert('Invalid password. Cannot set coins.');
+    }
+  }
+  
+  async function setCoinsInFirebase(activityName, coinsForActivity) {
+    const database = firebase.database();
+    const activityCoinsRef = database.ref(`ActivityCoins/${activityName}`);
+  
+    try {
+      activityCoinsRef.set(parseInt(coinsForActivity));
+      alert(`Coins for ${activityName} set successfully.`);
+    } catch (error) {
+      console.error(`Error setting coins: ${error.message}`);
+      alert(`Error setting coins for ${activityName}. Please try again.`);
+    }
+  }
+
   function closeAddModal() {
     document.getElementById("addModal").style.display = "none";
   }

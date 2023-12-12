@@ -13,30 +13,72 @@ document.addEventListener('DOMContentLoaded', async function () {
                 const studentNameMatch = fullMessage.match(/Student Name: ([^,]+)/);
                 const studentName = studentNameMatch ? studentNameMatch[1] : 'Student Name not found';
 
-                // Fetch coinsWallet from Firebase Realtime Database
                 const coinsWallet = await getCoinsWalletFromFirebase(studentName);
+                const activityCoins = await getCoinsForActivityFromFirebase('CricketGround');
 
-                if (coinsWallet >= 100) {
-                    // Deduct 100 coins
+                if (coinsWallet >= activityCoins) {
                     const previousCoins = coinsWallet;
-                    const updatedCoins = previousCoins - 100;
-                    // Update coinsWallet in Firebase
+                    const updatedCoins = previousCoins - activityCoins;
                     await updateCoinsWalletInFirebase(studentName, updatedCoins);
 
-                    alert(`Welcome to Cricket Ground, ${studentName}! You have been charged 100 coins.\nPrevious Balance: ${previousCoins} coins\nCurrent Balance: ${updatedCoins} coins`);
+                    alert(`Welcome to ${document.getElementById('activityName').textContent}! You have been charged ${activityCoins} coins.\nPrevious Balance: ${previousCoins} coins\nCurrent Balance: ${updatedCoins} coins`);
                 } else {
-                    alert(`Sorry, ${studentName}. You don't have enough coins to enter the Cricket Ground. Your current coin balance is ${coinsWallet}.`);
+                    alert(`Sorry, ${studentName}. You don't have enough coins to enter ${document.getElementById('activityName').textContent}. Your current coin balance is ${coinsWallet}.`);
                 }
 
                 ndef.stop();
             }
         });
+
+        // Fetch and display the initial activity information on page load
+        const initialCoinsRequired = await getCoinsForActivityFromFirebase('CricketGround');
+        const activityNameElement = document.getElementById('activityName');
+        const activityDescriptionElement = document.getElementById('activityDescription');
+
+        activityDescriptionElement.textContent = `${initialCoinsRequired} coins will be deducted`; 
+
+        const coinsInfoElement = document.getElementById('coinsInfo');
+        coinsInfoElement.textContent = `Coins needed: ${initialCoinsRequired}`;
     } catch (error) {
         alert('Error setting up NFC reading:', error);
     }
 });
 
-// Function to fetch coinsWallet from Firebase Realtime Database
+async function getCoinsForActivityFromFirebase(activityName) {
+    const database = firebase.database();
+    const activityCoinsRef = database.ref(`ActivityCoins/${activityName}`);
+
+    try {
+        const snapshot = await activityCoinsRef.once('value');
+        const coinsForActivity = snapshot.val();
+
+        if (coinsForActivity !== undefined) {
+            return coinsForActivity;
+        } else {
+            console.error(`Coins for activity ${activityName} not found`);
+            return 0;
+        }
+    } catch (error) {
+        console.error(`Error fetching coins for activity ${activityName}: ${error.message}`);
+        return 0; 
+    }
+}
+
+async function getCricketGroundCoins() {
+    const database = firebase.database();
+    const activityCoinsRef = database.ref('ActivityCoins/CricketGround');
+
+    try {
+        const snapshot = await activityCoinsRef.once('value');
+        const coinsForCricketGround = snapshot.val();
+
+        // Render the coins information
+        const coinsInfoElement = document.getElementById('coinsInfo');
+        coinsInfoElement.textContent = `Coins needed: ${coinsForCricketGround}`;
+    } catch (error) {
+        console.error(`Error fetching coins for Cricket Ground: ${error.message}`);
+    }
+}
 async function getCoinsWalletFromFirebase(studentName) {
     const database = firebase.database();
     const studentRef = database.ref(`students/${studentName}`);
@@ -49,15 +91,14 @@ async function getCoinsWalletFromFirebase(studentName) {
             return studentData.coinsWallet;
         } else {
             console.error(`Student data or coinsWallet not found for ${studentName}`);
-            return 0; // Default value if coinsWallet is not found
+            return 0; 
         }
     } catch (error) {
         console.error(`Error fetching student data: ${error.message}`);
-        return 0; // Default value in case of an error
+        return 0; 
     }
 }
 
-// Function to update coinsWallet in Firebase Realtime Database
 async function updateCoinsWalletInFirebase(studentName, newCoins) {
     const database = firebase.database();
     const studentRef = database.ref(`students/${studentName}`);

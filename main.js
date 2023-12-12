@@ -261,6 +261,15 @@ var ChromeSamples = {
     window.open('cricket-ground.html', '_blank');
   }
 
+  function openPlayGround() {
+    window.open('play-ground.html', '_blank');
+  }
+
+  function openBigSlide() {
+    window.open('big-slide.html', '_blank');
+  }
+
+  
   function closeAddModal() {
     document.getElementById("addModal").style.display = "none";
   }

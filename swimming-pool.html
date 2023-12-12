@@ -7,12 +7,13 @@
     <title>Swimming Pool</title>
   </head>
   <body>
-    <h1>Swimming Pool</h1>
-    <p>100 coins will be deduct</p>
+    <h1 id="activityName">Swimming Pool</h1>
+    <p id="activityDescription"></p>
+    <div id="coinsInfo"></div>
     <script src="https://www.gstatic.com/firebasejs/7.24.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/7.24.0/firebase-database.js"></script>
     <script src="constants.js"></script>
     <script src="firebase-config.js"></script>
-    <script src="swimming-pool.js"></script>
+    <script src="swimming-pool.js?v=<?= rand() ?"></script>
   </body>
 </html>

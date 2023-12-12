@@ -14,7 +14,8 @@ document.addEventListener('DOMContentLoaded', async function () {
                 const studentName = studentNameMatch ? studentNameMatch[1] : 'Student Name not found';
 
                 const coinsWallet = await getCoinsWalletFromFirebase(studentName);
-                const activityCoins = await getCoinsForActivityFromFirebase('CricketGround');
+                const activityCoins = await getCoinsForActivityFromFirebase('Cricket Ground');
+                alert(activityCoins)
 
                 if (coinsWallet >= activityCoins) {
                     const previousCoins = coinsWallet;
@@ -31,7 +32,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
 
         // Fetch and display the initial activity information on page load
-        const initialCoinsRequired = await getCoinsForActivityFromFirebase('CricketGround');
+        const initialCoinsRequired = await getCoinsForActivityFromFirebase('Cricket Ground');
         const activityNameElement = document.getElementById('activityName');
         const activityDescriptionElement = document.getElementById('activityDescription');
 
@@ -64,21 +65,7 @@ async function getCoinsForActivityFromFirebase(activityName) {
     }
 }
 
-async function getCricketGroundCoins() {
-    const database = firebase.database();
-    const activityCoinsRef = database.ref('ActivityCoins/CricketGround');
 
-    try {
-        const snapshot = await activityCoinsRef.once('value');
-        const coinsForCricketGround = snapshot.val();
-
-        // Render the coins information
-        const coinsInfoElement = document.getElementById('coinsInfo');
-        coinsInfoElement.textContent = `Coins needed: ${coinsForCricketGround}`;
-    } catch (error) {
-        console.error(`Error fetching coins for Cricket Ground: ${error.message}`);
-    }
-}
 async function getCoinsWalletFromFirebase(studentName) {
     const database = firebase.database();
     const studentRef = database.ref(`students/${studentName}`);

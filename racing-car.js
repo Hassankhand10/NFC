@@ -31,7 +31,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
         });
 
-        // Fetch and display the initial activity information on page load
         const initialCoinsRequired = await getCoinsForActivityFromFirebase('Racing Car');
         const activityNameElement = document.getElementById('activityName');
         const activityDescriptionElement = document.getElementById('activityDescription');

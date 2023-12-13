@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', async function () {
     try {
+        await fetchAndDisplayEntryLogs('Swimming Pool')
         const ndef = new NDEFReader();
         ndef.scan();
 
@@ -15,13 +16,12 @@ document.addEventListener('DOMContentLoaded', async function () {
 
                 const coinsWallet = await getCoinsWalletFromFirebase(studentName);
                 const activityCoins = await getCoinsForActivityFromFirebase('Swimming Pool');
-                alert(activityCoins)
 
                 if (coinsWallet >= activityCoins) {
                     const previousCoins = coinsWallet;
                     const updatedCoins = previousCoins - activityCoins;
                     await updateCoinsWalletInFirebase(studentName, updatedCoins);
-
+                    await storeEntryLogInFirebase(studentName , 'Swimming Pool')
                     alert(`Welcome to ${document.getElementById('activityName').textContent}! You have been charged ${activityCoins} coins.\nPrevious Balance: ${previousCoins} coins\nCurrent Balance: ${updatedCoins} coins`);
                 } else {
                     alert(`Sorry, ${studentName}. You don't have enough coins to enter ${document.getElementById('activityName').textContent}. Your current coin balance is ${coinsWallet}.`);
@@ -31,7 +31,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
         });
 
-        // Fetch and display the initial activity information on page load
         const initialCoinsRequired = await getCoinsForActivityFromFirebase('Swimming Pool');
         const activityNameElement = document.getElementById('activityName');
         const activityDescriptionElement = document.getElementById('activityDescription');
@@ -40,10 +39,64 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         const coinsInfoElement = document.getElementById('coinsInfo');
         coinsInfoElement.textContent = `Coins needed: ${initialCoinsRequired}`;
+        const entryLogsRef = firebase.database().ref('entryLogs/Swimming Pool');
+        entryLogsRef.on('value', snapshot => {
+            const entryLogs = snapshot.val();
+            if (entryLogs) {
+                
+                fetchAndDisplayEntryLogs('Swimming Pool');
+            }
+        });
     } catch (error) {
         alert('Error setting up NFC reading:', error);
     }
 });
+
+async function fetchAndDisplayEntryLogs(activityName) {
+    const entryLogsListElement = document.getElementById('entryLogsList');
+
+    const database = firebase.database();
+    const activityLogsRef = database.ref(`entryLogs/${activityName}`);
+
+    try {
+        const snapshot = await activityLogsRef.once('value');
+        const entryLogs = snapshot.val();
+
+        if (entryLogs) {
+            entryLogsListElement.innerHTML = "";
+            Object.entries(entryLogs).forEach(([key, log]) => {
+                const studentName = log.studentName;
+                const entryDate = new Date(log.entryDate).toLocaleString();
+
+                const entryLogItem = `<li>${studentName} charged the card on ${entryDate}</li>`;
+                entryLogsListElement.innerHTML += entryLogItem;
+
+                console.log(`Entry Log Item: ${studentName} - ${entryDate}`);
+            });
+        } else {
+            console.log('No Entry Logs Found');
+            entryLogsListElement.innerHTML = '<li>No entry logs found.</li>';
+        }
+    } catch (error) {
+        console.error('Error fetching entry logs:', error.message);
+    }
+}
+
+function storeEntryLogInFirebase(studentName, activityName) {
+    const database = firebase.database();
+    const entryLogsRef = database.ref(`entryLogs/${activityName}`);
+
+    try {
+        const entryLog = {
+            studentName: studentName,
+            entryDate: new Date().toISOString(),
+        };
+
+        entryLogsRef.push(entryLog);
+    } catch (error) {
+        console.error(`Error storing entry log in Firebase: ${error.message}`);
+    }
+}
 
 async function getCoinsForActivityFromFirebase(activityName) {
     const database = firebase.database();

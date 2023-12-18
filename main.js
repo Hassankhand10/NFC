@@ -63,49 +63,65 @@ scanButton.addEventListener("click", async () => {
   }
 });
 
+window.onload = function() {
+    isStudentNameInUrl();
+}
+
+function isStudentNameInUrl() {
+    const urlSearchParams = new URLSearchParams(window.location.search);
+    const studentName = urlSearchParams.get('name');
+    console.log(studentName);
+
+    if (studentName) {
+        document.getElementById('writeButton').removeAttribute('disabled');
+      }
+}
+
 document.getElementById("writeButton").addEventListener("click", () => {
-  document.getElementById("studentForm").style.display = "block";
-  document.getElementById("actionButtons").style.display = "none";
+    document.getElementById("actionButtons").style.display = "none";
+    submitForm(); 
 });
 
 function submitForm() {
-  try {
-    const database = firebase.database();
-    const studentsRef = database.ref("students");
-    const studentNameInput = document.getElementById("studentName");
-    studentName = studentNameInput.value;
+    try {
+        const database = firebase.database();
+        const studentsRef = database.ref("students");
 
-    if (studentName) {
-      studentsRef
-        .child(studentName)
-        .once("value")
-        .then(async (snapshot) => {
-          if (snapshot.exists()) {
-            const existingData = snapshot.val();
-            document.getElementById("actionButtons").style.display = "block";
-            if (existingData.serialNumber && existingData.uniqueNumber) {
-              log(
-                `User with name '${studentName}' has already registered with NFC.`
-              );
-            } else {
-              log(
-                `User with name '${studentName}' is not registered with NFC.`
-              );
-            }
-          } else {
-            log(`User with name '${studentName}' not found in the database.`);
-          }
-        })
-        .catch((error) => {
-          log("Error checking student name:", error.message);
-        });
-    } else {
-      log("User did not provide a name.");
+        const urlSearchParams = new URLSearchParams(window.location.search);
+        const studentName = urlSearchParams.get('name');
+
+        if (studentName) {
+            studentsRef
+                .child(studentName)
+                .once("value")
+                .then(async (snapshot) => {
+                    if (snapshot.exists()) {
+                        const existingData = snapshot.val();
+                        document.getElementById("actionButtons").style.display = "block";
+                        if (existingData.serialNumber && existingData.uniqueNumber) {
+                            log(
+                                `User with name '${studentName}' has already registered with NFC.`
+                            );
+                        } else {
+                            log(
+                                `User with name '${studentName}' is not registered with NFC.`
+                            );
+                        }
+                    } else {
+                        log(`User with name '${studentName}' not found in the database.`);
+                    }
+                })
+                .catch((error) => {
+                    log("Error checking student name:", error.message);
+                });
+        } else {
+            log("User did not provide a name.");
+        }
+    } catch (error) {
+        log("Argh! " + error);
     }
-  } catch (error) {
-    log("Argh! " + error);
-  }
 }
+
 
 async function addAction() {
   const studentName = document.getElementById("studentName").value;

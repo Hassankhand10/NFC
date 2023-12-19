@@ -30,7 +30,13 @@ log = ChromeSamples.log;
 if (!("NDEFReader" in window))
   ChromeSamples.setStatus("Web NFC is not available. Use Chrome on Android.");
 
-var studentName;
+//   document.addEventListener('DOMContentLoaded', function () {
+//     console.log('DOM is loaded');
+//     const studentNameInput = document.getElementById('studentName');
+
+//     studentNameInput.value = '';
+
+// });
 scanButton.addEventListener("click", async () => {
   log("User clicked scan button");
 
@@ -63,175 +69,200 @@ scanButton.addEventListener("click", async () => {
   }
 });
 
-window.onload = function() {
-    isStudentNameInUrl();
+function writeButtonClick() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const nameParam = urlParams.get('name');
+
+    if (nameParam) {
+        
+        processStudentName(nameParam)
+
+    } else {
+        
+        document.getElementById('studentForm').style.display = 'block';
+    }
 }
-
-function isStudentNameInUrl() {
-    const urlSearchParams = new URLSearchParams(window.location.search);
-    const studentName = urlSearchParams.get('name');
-    console.log(studentName);
-
-    if (studentName) {
-        document.getElementById('writeButton').removeAttribute('disabled');
-      }
-}
-
-document.getElementById("writeButton").addEventListener("click", () => {
-    document.getElementById("actionButtons").style.display = "none";
-    submitForm(); 
-});
 
 function submitForm() {
+    const studentNameFromInput = document.getElementById('studentName').value;
+            processStudentName(studentNameFromInput);
+}
+
+function processStudentName(studentName) {
     try {
         const database = firebase.database();
         const studentsRef = database.ref("students");
 
-        const urlSearchParams = new URLSearchParams(window.location.search);
-        const studentName = urlSearchParams.get('name');
-
-        if (studentName) {
-            studentsRef
-                .child(studentName)
-                .once("value")
-                .then(async (snapshot) => {
-                    if (snapshot.exists()) {
-                        const existingData = snapshot.val();
-                        document.getElementById("actionButtons").style.display = "block";
-                        if (existingData.serialNumber && existingData.uniqueNumber) {
-                            log(
-                                `User with name '${studentName}' has already registered with NFC.`
-                            );
-                        } else {
-                            log(
-                                `User with name '${studentName}' is not registered with NFC.`
-                            );
-                        }
+        studentsRef
+            .child(studentName)
+            .once("value")
+            .then(async (snapshot) => {
+                if (snapshot.exists()) {
+                    const existingData = snapshot.val();
+                    document.getElementById("actionButtons").style.display = "block";
+                    if (existingData.serialNumber && existingData.uniqueNumber) {
+                        log(
+                            `User with name '${studentName}' has already registered with NFC.`
+                        );
                     } else {
-                        log(`User with name '${studentName}' not found in the database.`);
+                        log(
+                            `User with name '${studentName}' is not registered with NFC.`
+                        );
                     }
-                })
-                .catch((error) => {
-                    log("Error checking student name:", error.message);
-                });
-        } else {
-            log("User did not provide a name.");
-        }
+                } else {
+                    log(`User with name '${studentName}' not found in the database.`);
+                }
+            })
+            .catch((error) => {
+                log("Error checking student name:", error.message);
+            });
     } catch (error) {
         log("Argh! " + error);
     }
 }
 
 
-async function addAction() {
-  const studentName = document.getElementById("studentName").value;
 
-  if (!("NDEFReader" in window)) {
-    alert("Web NFC is not available. Use Chrome on Android.");
-  } else {
-    document.getElementById("addModal").style.display = "block";
-    try {
-      const ndef = new NDEFReader();
-      await ndef.scan();
-      document.getElementById("addModal").style.display = "none";
-      log("> Scan started");
-
-      ndef.addEventListener("readingerror", () => {
-        log("Argh! Cannot read data from the NFC tag. Try another one?");
-      });
-
-      ndef.addEventListener("reading", async ({ message, serialNumber }) => {
-        log(`> Serial Number: ${serialNumber}`);
-
-        const database = firebase.database();
-        const studentsRef = database.ref("students");
-
-        try {
-          const snapshot = await studentsRef.child(studentName).once("value");
-
-          if (snapshot.exists()) {
-            const existingData = snapshot.val();
-
-            if (!existingData.uniqueNumber && !existingData.serialNumber) {
-              const uniqueNumber =
-                Date.now() + Math.floor(Math.random() * 1000);
-              const nfcSerialNumber = serialNumber;
-
-              try {
-                const ndefWrite = new NDEFReader();
-                const encodedStudentName = encodeURIComponent(studentName);
-                log(encodedStudentName);
-                await ndefWrite.write(
-                  `Unique Number: ${uniqueNumber}, Student Name: ${studentName}, URL: http://10.171.171.52:4200/coins-history/student/all/${encodedStudentName}/${uniqueNumber}`
+async function processAddConfirmation(studentName) {
+    
+    if (!("NDEFReader" in window)) {
+      alert("Web NFC is not available. Use Chrome on Android.");
+    } 
+      try {
+        
+        const ndef = new NDEFReader();
+        await ndef.scan();
+        document.getElementById("addModal").style.display = "none";
+        log("> Scan started");
+  
+        ndef.addEventListener("readingerror", () => {
+          log("Argh! Cannot read data from the NFC tag. Try another one?");
+        });
+  
+        ndef.addEventListener("reading", async ({ message, serialNumber }) => {
+          log(`> Serial Number: ${serialNumber}`);
+  
+          const database = firebase.database();
+          const studentsRef = database.ref("students");
+  
+          try {
+            const snapshot = await studentsRef.child(studentName).once("value");
+  
+            if (snapshot.exists()) {
+              const existingData = snapshot.val();
+  
+              if (!existingData.uniqueNumber && !existingData.serialNumber) {
+                const uniqueNumber =
+                  Date.now() + Math.floor(Math.random() * 1000);
+                const nfcSerialNumber = serialNumber;
+  
+                try {
+                  const ndefWrite = new NDEFReader();
+                  const encodedStudentName = encodeURIComponent(studentName);
+                  log(encodedStudentName);
+                  await ndefWrite.write(
+                    `Unique Number: ${uniqueNumber}, Student Name: ${studentName}, URL: http://10.171.171.52:4200/coins-history/student/all/${encodedStudentName}/${uniqueNumber}`
+                  );
+  
+                  log("Message written successfully.");
+                  log(`Data updated for student: ${studentName}`);
+                  await studentsRef.child(studentName).update({
+                    uniqueNumber: uniqueNumber,
+                    serialNumber: nfcSerialNumber,
+                  });
+                } catch (error) {
+                  log(`Write failed: ${error}`);
+                }
+              } else {
+                alert(
+                  `Student with name '${studentName}' already has uniqueNumber and serialNumber.`
                 );
-
-                log("Message written successfully.");
-                log(`Data updated for student: ${studentName}`);
-                await studentsRef.child(studentName).update({
-                  uniqueNumber: uniqueNumber,
-                  serialNumber: nfcSerialNumber,
-                });
-              } catch (error) {
-                log(`Write failed: ${error}`);
               }
             } else {
-              alert(
-                `Student with name '${studentName}' already has uniqueNumber and serialNumber.`
-              );
+              alert(`Student with name '${studentName}' not found.`);
             }
-          } else {
-            alert(`Student with name '${studentName}' not found.`);
+          } catch (error) {
+            log("Error checking student name:", error.message);
           }
-        } catch (error) {
-          log("Error checking student name:", error.message);
-        }
-      });
-    } catch (error) {
-      log("Argh! " + error);
-      document.getElementById("addModal").style.display = "none";
+        });
+      } catch (error) {
+        log("Argh! " + error);
+        document.getElementById("addModal").style.display = "none";
+      }
+    }
+
+   function addAction() {
+    const urlParams = new URLSearchParams(window.location.search)
+    const nameParams = urlParams.get('name')
+    if (nameParams) {
+        processAddConfirmation(nameParams);
+    } else {
+      document.getElementById("addModal").style.display = "block";
+    }
+   } 
+   function addConfirmation() {
+    const passwordInput = document.getElementById("passwordAdd");
+    const password = passwordInput.value;
+  
+    if (password === "password") {
+      const studentName = document.getElementById("studentName").value; 
+      processAddConfirmation(studentName)
+  }
+  else {
+      log("Incorrect password. Add operation canceled.");
+      closeAddModal();
     }
   }
-}
-
-function deleteAction() {
-  const studentName = document.getElementById("studentName").value;
-  log(studentName);
-  document.getElementById("deleteModal").style.display = "block";
-}
-
-async function deleteConfirmation() {
-  const passwordInput = document.getElementById("password");
+  
+  function deleteAction() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const nameParam = urlParams.get('name');
+  
+    if (nameParam) {
+        processDeleteConfirmation(nameParam);
+    } else {
+      document.getElementById("deleteModal").style.display = "block";
+    }
+  }
+function deleteConfirmation() {
+  const passwordInput = document.getElementById("passwordDelete");
   const password = passwordInput.value;
 
   if (password === "password") {
-    const studentName = document.getElementById("studentName").value;
-
+    const studentName = document.getElementById("studentName").value; 
+    processDeleteConfirmation(studentName)
+}
+else {
+    log("Incorrect password. Delete operation canceled.");
+    closeDeleteModal();
+  }
+}
+async function processDeleteConfirmation(studentName) {
     if (studentName) {
       const database = firebase.database();
       const studentsRef = database.ref("students");
-
+  
       try {
-        const studentSnapshot = await studentsRef
-          .child(studentName)
-          .once("value");
-
+        const studentSnapshot = await studentsRef.child(studentName).once("value");
+  
         if (studentSnapshot.exists()) {
-          const studentData = studentSnapshot.val();
+          const studentData = studentSnapshot.val(); 
+  
           if (studentData.serialNumber && studentData.uniqueNumber) {
             const serialNumber = studentData.serialNumber;
             const uniqueNumber = studentData.uniqueNumber;
-
+  
             await studentsRef.child(studentName).update({
               serialNumber: null,
               uniqueNumber: null,
             });
-
+  
             log(
               `Serial Number and Unique Number for student '${studentName}' deleted from the database.`
             );
             closeDeleteModal();
           } else {
-            log("Student NFC is not register");
+            log("Student NFC is not registered");
             closeDeleteModal();
           }
         } else {
@@ -241,21 +272,21 @@ async function deleteConfirmation() {
       } catch (error) {
         log(`Error deleting student: ${error.message}`);
       }
-
+  
       closeDeleteModal();
     } else {
       log("Student Name not found. Delete operation canceled.");
       closeDeleteModal();
     }
-  } else {
-    log("Incorrect password. Delete operation canceled.");
-    closeDeleteModal();
   }
-}
+  
 
 function closeDeleteModal() {
   document.getElementById("deleteModal").style.display = "none";
 }
+function closeAddModal() {
+    document.getElementById("addModal").style.display = "none";
+  }
 
 function openCricketGround() {
   window.open("cricket-ground.html", "_blank");
@@ -319,15 +350,106 @@ async function getNFCSerialNumber() {
     }, 50000);
   });
 }
+function openAdditionalInfoForm() {
+    document.getElementById("additionalInfoForm").style.display = "block";
+    document.getElementById("modalContent").style.display = "block";
+}
 
-makeReadOnlyButton.addEventListener("click", async () => {
-  log("User clicked make read-only button");
+function closeAdditionalInfoForm() {
+    document.getElementById("additionalInfoForm").style.display = "none";
+    document.getElementById("modalContent").style.display = "none";
+}
 
-  try {
-    const ndef = new NDEFReader();
-    await ndef.makeReadOnly();
-    log("> NFC tag has been made permanently read-only");
-  } catch (error) {
-    log("Argh! " + error);
+
+function previewImage() {
+    const fileInput = document.getElementById("image");
+    const imagePreview = document.getElementById("imagePreview");
+
+    const file = fileInput.files[0];
+    if (file) {
+        const reader = new FileReader();
+
+        reader.onload = function (e) {
+            imagePreview.src = e.target.result;
+        };
+
+        reader.readAsDataURL(file);
+    } else {
+        imagePreview.src = "";
+    }
+}
+function submitAdditionalInfo() {
+    const bloodGroup = document.getElementById("bloodGroup").value;
+    const address = document.getElementById("address").value;
+    const image = document.getElementById("image").files[0];
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const studentName = urlParams.get('name');
+
+    if (!studentName) {
+        alert("You are not allowed. Only teachers are allowed to perform this action.");
+        return;
+    }
+    const storageRef = firebase.storage().ref(`student_images/${studentName}`);
+
+    storageRef.put(image).then(() => {
+        storageRef.getDownloadURL().then((imageUrl) => {
+            const database = firebase.database();
+            const studentsRef = database.ref(`students/${studentName}`);
+            studentsRef.update({
+                bloodGroup: bloodGroup,
+                address: address,
+                imageUrl: imageUrl, 
+            }).then(() => {
+                alert("Additional information submitted successfully.");
+                closeAdditionalInfoForm();
+            }).catch((error) => {
+                console.error("Error updating student information:", error.message);
+            });
+        }).catch((error) => {
+            console.error("Error getting image download URL:", error.message);
+        });
+    }).catch((error) => {
+        console.error("Error uploading image:", error.message);
+    });
+}
+async function viewInformation() {
+    // Get the name and topic from the URL
+    const urlSearchParams = new URLSearchParams(window.location.search);
+    const nameFromUrl = urlSearchParams.get('name'); 
+    const topicFromUrl = urlSearchParams.get('topic'); 
+
+    if (!nameFromUrl || !topicFromUrl) {
+      console.log("Name or topic not found in the URL");
+      return;
+    }
+
+    try {
+      const studentSnapshot = await firebase.database().ref(`students/${nameFromUrl}`).once('value');
+      const studentInfo = studentSnapshot.val();
+      const contactSnapshot = await firebase.database().ref(`topics/${topicFromUrl}/students/${nameFromUrl}/numbers/student_phone`).once('value');
+      const fatherSnapshot = await firebase.database().ref(`topics/${topicFromUrl}/students/${nameFromUrl}/numbers/father_phone`).once('value');
+      const motherSnapshot = await firebase.database().ref(`topics/${topicFromUrl}/students/${nameFromUrl}/numbers/mother_phone`).once('value');
+
+      const contactNumber = contactSnapshot.val();
+      const fatherNumber = fatherSnapshot.val();
+      const motherNumber = motherSnapshot.val();
+
+      if (studentInfo) {
+        document.getElementById("modalStudentName").innerText = nameFromUrl;
+        document.getElementById("modalBloodGroup").innerText = studentInfo.bloodGroup || 'N/A';
+        document.getElementById("modalContact").innerText = contactNumber || 'N/A';
+        document.getElementById("modalFather").innerText = fatherNumber || 'N/A';
+        document.getElementById("modalMother").innerText = motherNumber || 'N/A';
+        document.getElementById("modalAddress").innerText = studentInfo.address || 'N/A';
+        document.getElementById("modalImgUrl").innerText = studentInfo.imageUrl || 'N/A';
+        document.getElementById("modalStudentImage").src = studentInfo.imageUrl || 'N/A';
+
+        document.getElementById("infoDisplay").style.display = "block";
+      } else {
+        alert("Student not found in Firebase");
+      }
+    } catch (error) {
+      console.error("Error fetching data from Firebase:", error);
+    }
   }
-});

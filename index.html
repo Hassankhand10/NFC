@@ -12,12 +12,68 @@
     <h3>Actions With NFC</h3>
 
     <button id="scanButton">Scan</button>
-    <button id="writeButton" disabled>Write</button>
+    <button id="writeButton" onclick="writeButtonClick()">Write</button>
+    <button id="additionalInfoButton" onclick="openAdditionalInfoForm()">
+      Add Additional Information
+    </button>
+    <button id="viewInfoButton" onclick="viewInformation()">
+      View Information
+    </button>
+    
+    <div id="infoDisplay" class="info-display" style="display: none;">
+      <h3>Student Information</h3>
+      <p><strong>Name:</strong> <span id="modalStudentName"></span></p>
+      <p><strong>Blood Group:</strong> <span id="modalBloodGroup"></span></p>
+      <p><strong>Contact:</strong> <span id="modalContact"></span></p>
+      <p><strong>Father:</strong> <span id="modalFather"></span></p>
+      <p><strong>Mother:</strong> <span id="modalMother"></span></p>
+      <p><strong>Address:</strong> <span id="modalAddress"></span></p>
+      <p><strong>ImageUrl:</strong> <span id="modalImgUrl"></span></p>
+      <img id="modalStudentImage" style="max-width: 100%; max-height: 200px; margin-top: 10px"/>
+    </div>
+
+    <div id="additionalInfoForm" class="modal">
+      <div id="modalContent" class="modal-content">
+        <span class="close" onclick="closeAdditionalInfoForm()">&times;</span>
+
+        <label for="bloodGroup">Blood Group:</label>
+        <input
+          type="text"
+          id="bloodGroup"
+          name="bloodGroup"
+          placeholder="Enter Blood Group"
+        />
+
+        <label for="address">Address:</label>
+        <textarea
+          id="address"
+          name="address"
+          placeholder="Enter Address"
+        ></textarea>
+
+        <label for="image">Image:</label>
+        <input
+          type="file"
+          id="image"
+          name="image"
+          accept="image/*"
+          onchange="previewImage()"
+        />
+        <img id="imagePreview" class="image-preview" />
+
+        <button type="button" onclick="submitAdditionalInfo()">Submit</button>
+        <button type="button" onclick="closeAdditionalInfoForm()">
+          Cancel
+        </button>
+      </div>
+    </div>
 
     <div id="studentForm">
       <label for="studentName">Enter student name:</label>
-      <input type="text" id="studentName" name="studentName" required />
-      <button type="button" onclick="submitForm()">Submit</button>
+      <input type="text" id="studentName" name="studentName" />
+      <button type="button" id="submitButton" onclick="submitForm()">
+        Submit
+      </button>
     </div>
 
     <div id="actionButtons" class="action-buttons">
@@ -25,9 +81,16 @@
       <button id="deleteButton" onclick="deleteAction()">Delete</button>
     </div>
 
+    <div id="addModal">
+      <label for="password">Enter password:</label>
+      <input type="password" id="passwordAdd" name="password" required />
+      <button type="button" onclick="addConfirmation()">Confirm Add</button>
+      <button type="button" onclick="closeAddModal()">Cancel</button>
+    </div>
+
     <div id="deleteModal">
       <label for="password">Enter password:</label>
-      <input type="password" id="password" name="password" required />
+      <input type="password" id="passwordDelete" name="password" required />
       <button type="button" onclick="deleteConfirmation()">
         Confirm Delete
       </button>
@@ -45,25 +108,34 @@
       <div id="status"></div>
       <pre id="log"></pre>
     </div>
+    <h3>Student Information</h3>
     <h3>Activity</h3>
-<div>
-  <button id="cricketGroundButton" onclick="openCricketGround()">Cricket Ground</button>
-  <button id="playGroundButton" onclick="openPlayGround()">Play ground</button>
-  <button id="bigSlideButton"  onclick="openBigSlide()">Big Slide</button>
-  <button id="swimmingPoolButton" onclick="openSwimmingPool()">Swimming Pool</button>
-  <button id="racingCarButton"  onclick="openRacingCar()">Racing Car</button>
-</div>
+    <div>
+      <button id="cricketGroundButton" onclick="openCricketGround()">
+        Cricket Ground
+      </button>
+      <button id="playGroundButton" onclick="openPlayGround()">
+        Play ground
+      </button>
+      <button id="bigSlideButton" onclick="openBigSlide()">Big Slide</button>
+      <button id="swimmingPoolButton" onclick="openSwimmingPool()">
+        Swimming Pool
+      </button>
+      <button id="racingCarButton" onclick="openRacingCar()">Racing Car</button>
+    </div>
 
-<h3>Set Coins For Activity</h3>
-  <div>
-    <button onclick="setCoins('Cricket Ground')">Cricket Ground</button>
-    <button onclick="setCoins('Play ground')">Play ground</button>
-    <button onclick="setCoins('Big Slide')">Big Slide</button>
-    <button onclick="setCoins('Swimming Pool')">Swimming Pool</button>
-    <button onclick="setCoins('Racing Car')">Racing Car</button>
-  </div>
+    <h3>Set Coins For Activity</h3>
+    <div>
+      <button onclick="setCoins('Cricket Ground')">Cricket Ground</button>
+      <button onclick="setCoins('Play ground')">Play ground</button>
+      <button onclick="setCoins('Big Slide')">Big Slide</button>
+      <button onclick="setCoins('Swimming Pool')">Swimming Pool</button>
+      <button onclick="setCoins('Racing Car')">Racing Car</button>
+    </div>
     <script src="https://www.gstatic.com/firebasejs/7.24.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/7.24.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.24.0/firebase-storage.js"></script>
+
     <script src="constants.js"></script>
     <script src="firebase-config.js"></script>
     <script src="main.js?v=30"></script>

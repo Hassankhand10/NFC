@@ -431,43 +431,64 @@ function submitAdditionalInfo() {
 }
 
 function submitAdditionalInfoModal(studentName) {
+  // Validate student name
   if (!studentName) {
-    alert("Please select a valid student name.");
-    return;
-}
-    const bloodGroup = document.getElementById("bloodGroup").value;
-    const address = document.getElementById("address").value;
-    const image = document.getElementById("image").files[0];
-    const storageRef = firebase.storage().ref(`student_images/${studentName}`);
+      alert("Please select a valid student name.");
+      return;
+  }
 
-    storageRef.put(image).then(() => {
-        storageRef.getDownloadURL().then((imageUrl) => {
-            const database = firebase.database();
-            const studentsRef = database.ref(`students/${studentName}`);
-            studentsRef.update({
-                bloodGroup: bloodGroup,
-                address: address,
-                imageUrl: imageUrl, 
-            }).then(() => {
-                alert("Additional information submitted successfully.");
-                closeAdditionalInfoForm();
-            }).catch((error) => {
-                console.error("Error updating student information:", error.message);
-            });
-        }).catch((error) => {
-            console.error("Error getting image download URL:", error.message);
-        });
-    }).catch((error) => {
-        console.error("Error uploading image:", error.message);
-    }); 
+  // Validate blood group
+  const bloodGroup = document.getElementById("bloodGroup").value;
+  if (!bloodGroup) {
+      alert("Please enter the blood group.");
+      return;
+  }
+
+  // Validate address
+  const address = document.getElementById("address").value;
+  if (!address) {
+      alert("Please enter the address.");
+      return;
+  }
+
+  // Validate image
+  const imageInput = document.getElementById("image");
+  const image = imageInput.files[0];
+  if (!image) {
+      alert("Please select an image.");
+      return;
+  }
+  const storageRef = firebase.storage().ref(`student_images/${studentName}`);
+
+  storageRef.put(image).then(() => {
+      storageRef.getDownloadURL().then((imageUrl) => {
+          const database = firebase.database();
+          const studentsRef = database.ref(`students/${studentName}`);
+          studentsRef.update({
+              bloodGroup: bloodGroup,
+              address: address,
+              imageUrl: imageUrl,
+          }).then(() => {
+              alert("Additional information submitted successfully.");
+              closeAdditionalInfoForm();
+          }).catch((error) => {
+              console.error("Error updating student information:", error.message);
+          });
+      }).catch((error) => {
+          console.error("Error getting image download URL:", error.message);
+      });
+  }).catch((error) => {
+      console.error("Error uploading image:", error.message);
+  });
 }
+
 
 async function viewInformation() {
   const urlSearchParams = new URLSearchParams(window.location.search);
     const nameFromUrl = urlSearchParams.get('name'); 
     const topicFromUrl = urlSearchParams.get('topic'); 
     viewInformationDetails(nameFromUrl , topicFromUrl)
-    
+
 
 }
 async function viewInformationDetails(nameFromUrl , topicFromUrl) {

@@ -351,13 +351,29 @@ async function getNFCSerialNumber() {
   });
 }
 function openAdditionalInfoForm() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const studentNameinUrl = urlParams.get('name');
+
+  if (studentNameinUrl) {
+      
     document.getElementById("additionalInfoForm").style.display = "block";
     document.getElementById("modalContent").style.display = "block";
+    
+  } else {
+    studentNameContainer.style.display = "block";
+  }
 }
 
 function closeAdditionalInfoForm() {
-    document.getElementById("additionalInfoForm").style.display = "none";
-    document.getElementById("modalContent").style.display = "none";
+  document.getElementById("additionalInfoForm").style.display = "none";
+  document.getElementById("modalContent").style.display = "none";
+}
+
+function dropdownValueSubmit()  {
+  document.getElementById("additionalInfoForm").style.display = "block";
+    document.getElementById("modalContent").style.display = "block";
+    
+
 }
 
 
@@ -378,18 +394,50 @@ function previewImage() {
         imagePreview.src = "";
     }
 }
+function fetchStudentNames() {
+  const database = firebase.database();
+  const studentsRef = database.ref('students');
+
+  studentsRef.once('value').then((snapshot) => {
+      const studentNames = Object.keys(snapshot.val() || {});
+      const dropdown = document.getElementById("studentNameDropdown");
+
+      dropdown.innerHTML = '';
+      studentNames.forEach((name) => {
+          const option = document.createElement("option");
+          option.value = name;
+          option.text = name;
+          dropdown.appendChild(option);
+      });
+  }).catch((error) => {
+      console.error("Error fetching student names:", error.message);
+  });
+}
+fetchStudentNames();
 function submitAdditionalInfo() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const studentNameinUrl = urlParams.get('name');
+
+  if (studentNameinUrl) {
+    submitAdditionalInfoModal(studentNameinUrl);
+    console.log(studentNameinUrl)
+  } else {
+    const studentNameDropdown = document.getElementById("studentNameDropdown");
+  studentName = studentNameDropdown.value.trim();
+    submitAdditionalInfoModal(studentName);
+    console.log(studentName)
+  }
+  
+}
+
+function submitAdditionalInfoModal(studentName) {
+  if (!studentName) {
+    alert("Please select a valid student name.");
+    return;
+}
     const bloodGroup = document.getElementById("bloodGroup").value;
     const address = document.getElementById("address").value;
     const image = document.getElementById("image").files[0];
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const studentName = urlParams.get('name');
-
-    if (!studentName) {
-        alert("You are not allowed. Only teachers are allowed to perform this action.");
-        return;
-    }
     const storageRef = firebase.storage().ref(`student_images/${studentName}`);
 
     storageRef.put(image).then(() => {
@@ -411,16 +459,22 @@ function submitAdditionalInfo() {
         });
     }).catch((error) => {
         console.error("Error uploading image:", error.message);
-    });
+    }); 
 }
+
 async function viewInformation() {
-    // Get the name and topic from the URL
-    const urlSearchParams = new URLSearchParams(window.location.search);
+  const urlSearchParams = new URLSearchParams(window.location.search);
     const nameFromUrl = urlSearchParams.get('name'); 
     const topicFromUrl = urlSearchParams.get('topic'); 
+    viewInformationDetails(nameFromUrl , topicFromUrl)
+    
+
+}
+async function viewInformationDetails(nameFromUrl , topicFromUrl) {
+    
 
     if (!nameFromUrl || !topicFromUrl) {
-      console.log("Name or topic not found in the URL");
+     alert("Name or topic not found in the URL");
       return;
     }
 

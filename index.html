@@ -19,7 +19,13 @@
     <button id="viewInfoButton" onclick="viewInformation()">
       View Information
     </button>
-    
+    <div id="studentNameContainer" style="display: none;  margin-top: 10px;">
+      <label for="studentNameDropdown">Select Student Name:</label>
+      <select id="studentNameDropdown">
+          <option value="" disable selected>Select Student Name</option>
+      </select>
+      <button onclick="dropdownValueSubmit()">Submit</button>
+  </div>
     <div id="infoDisplay" class="info-display" style="display: none;">
       <h3>Student Information</h3>
       <p><strong>Name:</strong> <span id="modalStudentName"></span></p>
@@ -138,6 +144,6 @@
 
     <script src="constants.js"></script>
     <script src="firebase-config.js"></script>
-    <script src="main.js?v=30"></script>
+    <script src="main.js"></script>
   </body>
 </html>

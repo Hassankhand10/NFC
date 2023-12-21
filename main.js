@@ -351,13 +351,29 @@ async function getNFCSerialNumber() {
   });
 }
 function openAdditionalInfoForm() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const studentNameinUrl = urlParams.get('name');
+
+  if (studentNameinUrl) {
+      
     document.getElementById("additionalInfoForm").style.display = "block";
     document.getElementById("modalContent").style.display = "block";
+    
+  } else {
+    studentNameContainer.style.display = "block";
+  }
 }
 
 function closeAdditionalInfoForm() {
-    document.getElementById("additionalInfoForm").style.display = "none";
-    document.getElementById("modalContent").style.display = "none";
+  document.getElementById("additionalInfoForm").style.display = "none";
+  document.getElementById("modalContent").style.display = "none";
+}
+
+function dropdownValueSubmit()  {
+  document.getElementById("additionalInfoForm").style.display = "block";
+    document.getElementById("modalContent").style.display = "block";
+    
+
 }
 
 
@@ -378,48 +394,108 @@ function previewImage() {
         imagePreview.src = "";
     }
 }
-function submitAdditionalInfo() {
-    const bloodGroup = document.getElementById("bloodGroup").value;
-    const address = document.getElementById("address").value;
-    const image = document.getElementById("image").files[0];
+function fetchStudentNames() {
+  const database = firebase.database();
+  const studentsRef = database.ref('students');
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const studentName = urlParams.get('name');
+  studentsRef.once('value').then((snapshot) => {
+      const studentNames = Object.keys(snapshot.val() || {});
+      const dropdown = document.getElementById("studentNameDropdown");
 
-    if (!studentName) {
-        alert("You are not allowed. Only teachers are allowed to perform this action.");
-        return;
-    }
-    const storageRef = firebase.storage().ref(`student_images/${studentName}`);
-
-    storageRef.put(image).then(() => {
-        storageRef.getDownloadURL().then((imageUrl) => {
-            const database = firebase.database();
-            const studentsRef = database.ref(`students/${studentName}`);
-            studentsRef.update({
-                bloodGroup: bloodGroup,
-                address: address,
-                imageUrl: imageUrl, 
-            }).then(() => {
-                alert("Additional information submitted successfully.");
-                closeAdditionalInfoForm();
-            }).catch((error) => {
-                console.error("Error updating student information:", error.message);
-            });
-        }).catch((error) => {
-            console.error("Error getting image download URL:", error.message);
-        });
-    }).catch((error) => {
-        console.error("Error uploading image:", error.message);
-    });
+      dropdown.innerHTML = '';
+      studentNames.forEach((name) => {
+          const option = document.createElement("option");
+          option.value = name;
+          option.text = name;
+          dropdown.appendChild(option);
+      });
+  }).catch((error) => {
+      console.error("Error fetching student names:", error.message);
+  });
 }
+fetchStudentNames();
+function submitAdditionalInfo() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const studentNameinUrl = urlParams.get('name');
+
+  if (studentNameinUrl) {
+    submitAdditionalInfoModal(studentNameinUrl);
+    console.log(studentNameinUrl)
+  } else {
+    const studentNameDropdown = document.getElementById("studentNameDropdown");
+  studentName = studentNameDropdown.value.trim();
+    submitAdditionalInfoModal(studentName);
+    console.log(studentName)
+  }
+  
+}
+
+function submitAdditionalInfoModal(studentName) {
+  // Validate student name
+  if (!studentName) {
+      alert("Please select a valid student name.");
+      return;
+  }
+
+  // Validate blood group
+  const bloodGroup = document.getElementById("bloodGroup").value;
+  if (!bloodGroup) {
+      alert("Please enter the blood group.");
+      return;
+  }
+
+  // Validate address
+  const address = document.getElementById("address").value;
+  if (!address) {
+      alert("Please enter the address.");
+      return;
+  }
+
+  // Validate image
+  const imageInput = document.getElementById("image");
+  const image = imageInput.files[0];
+  if (!image) {
+      alert("Please select an image.");
+      return;
+  }
+  const storageRef = firebase.storage().ref(`student_images/${studentName}`);
+
+  storageRef.put(image).then(() => {
+      storageRef.getDownloadURL().then((imageUrl) => {
+          const database = firebase.database();
+          const studentsRef = database.ref(`students/${studentName}`);
+          studentsRef.update({
+              bloodGroup: bloodGroup,
+              address: address,
+              imageUrl: imageUrl,
+          }).then(() => {
+              alert("Additional information submitted successfully.");
+              closeAdditionalInfoForm();
+          }).catch((error) => {
+              console.error("Error updating student information:", error.message);
+          });
+      }).catch((error) => {
+          console.error("Error getting image download URL:", error.message);
+      });
+  }).catch((error) => {
+      console.error("Error uploading image:", error.message);
+  });
+}
+
+
 async function viewInformation() {
     const urlSearchParams = new URLSearchParams(window.location.search);
     const nameFromUrl = urlSearchParams.get('name'); 
     const topicFromUrl = urlSearchParams.get('topic'); 
+    viewInformationDetails(nameFromUrl , topicFromUrl)
+
+
+}
+async function viewInformationDetails(nameFromUrl , topicFromUrl) {
+    
 
     if (!nameFromUrl || !topicFromUrl) {
-      console.log("You are not allowed. Only teachers are allowed to perform this action.");
+      console.log("Name or topic not found in the URL");
       return;
     }
 

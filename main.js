@@ -381,6 +381,7 @@ function openAdditionalInfoForm() {
         const teacherPassword = "password";
   
         if (enteredPassword === teacherPassword) {
+            document.getElementById("passwordModal").style.display = "none";
           document.getElementById("studentNameContainer").style.display = "block";
         } else {
           alert("You are not a teacher. Access denied.");

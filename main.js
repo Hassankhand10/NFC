@@ -537,10 +537,11 @@ async function fetchStudentDetails(studentName) {
         const studentDoc = querySnapshot.docs[0].data();
         if (Array.isArray(studentDoc.topics) && studentDoc.topics.length > 0) {
           const firstTopic = studentDoc.topics[0].topic !== undefined ? studentDoc.topics[0].topic : null;
-
+          const numbersArray = studentDoc.numbers || [];
           return {
               id: studentDoc.id,
               firstTopic: firstTopic,
+              numbers: numbersArray,
           };
         } else {
           return null;
@@ -560,9 +561,38 @@ async function viewInformation() {
     const nameFromUrl = urlSearchParams.get("name");
     const topicFromUrl = urlSearchParams.get("topic");
     const id = urlSearchParams.get("id");
+    
   
     if (nameFromUrl) {
-      viewInformationDetails(nameFromUrl, topicFromUrl , id);
+        const studentSnapshot = await firebase
+      .database()
+      .ref(`students/${nameFromUrl}`)
+      .once("value");
+    const studentInfo = studentSnapshot.val();
+    const contactSnapshot = await firebase
+      .database()
+      .ref(
+        `topics/${topicFromUrl}/students/${nameFromUrl}/numbers/student_phone`
+      )
+      .once("value");
+    const fatherSnapshot = await firebase
+      .database()
+      .ref(
+        `topics/${topicFromUrl}/students/${nameFromUrl}/numbers/father_phone`
+      )
+      .once("value");
+    const motherSnapshot = await firebase
+      .database()
+      .ref(
+        `topics/${topicFromUrl}/students/${nameFromUrl}/numbers/mother_phone`
+      )
+      .once("value");
+
+    const contactNumber = contactSnapshot.val();
+    const fatherNumber = fatherSnapshot.val();
+    const motherNumber = motherSnapshot.val();
+    if(studentInfo) {viewInformationDetails(nameFromUrl, topicFromUrl , id , contactNumber ,fatherNumber ,motherNumber);}
+      
     } else {
       const passwordModal = document.getElementById("passwordModal");
       passwordModal.style.display = "block";
@@ -597,9 +627,15 @@ async function viewInformation() {
     if (studentDetails) {
         const studentTopic = studentDetails.firstTopic;
         const studentId = studentDetails.id;
-        console.log("Student Topic:", studentTopic);
-        console.log(studentDetails.id)
-        viewInformationDetails(studentName , studentTopic)
+        const studentNumbers = studentDetails.numbers || ["N/A", "N/A", "N/A"];
+const [contact, fatherPhone, motherPhone] = studentNumbers;
+
+console.log("Contact:", contact);
+console.log("Father Phone:", fatherPhone);
+console.log("Mother Phone:", motherPhone);
+
+// Send each number as a separate argument to the function
+viewInformationDetails(studentName, studentTopic, studentId, contact, fatherPhone, motherPhone);
     } else {
       alert("Student not found in the database.");
     }
@@ -607,42 +643,18 @@ async function viewInformation() {
   }
   
 
-async function viewInformationDetails(nameFromUrl, topicFromUrl , id) {
+async function viewInformationDetails(nameFromUrl, topicFromUrl , id , contactNumber ,fatherNumber ,motherNumber) {
   if (!nameFromUrl || !topicFromUrl) {
     console.log("Name or topic not found in the URL");
     return;
   }
 
   try {
-    console.log(nameFromUrl , topicFromUrl)
     const studentSnapshot = await firebase
       .database()
       .ref(`students/${nameFromUrl}`)
       .once("value");
     const studentInfo = studentSnapshot.val();
-    const contactSnapshot = await firebase
-      .database()
-      .ref(
-        `topics/${topicFromUrl}/students/${nameFromUrl}/numbers/student_phone`
-      )
-      .once("value");
-    const fatherSnapshot = await firebase
-      .database()
-      .ref(
-        `topics/${topicFromUrl}/students/${nameFromUrl}/numbers/father_phone`
-      )
-      .once("value");
-    const motherSnapshot = await firebase
-      .database()
-      .ref(
-        `topics/${topicFromUrl}/students/${nameFromUrl}/numbers/mother_phone`
-      )
-      .once("value");
-
-    const contactNumber = contactSnapshot.val();
-    const fatherNumber = fatherSnapshot.val();
-    const motherNumber = motherSnapshot.val();
-
     if (studentInfo) {
       document.getElementById("modalStudentName").innerText = `${nameFromUrl} (${id})`;
       document.getElementById("modalBloodGroup").innerText =

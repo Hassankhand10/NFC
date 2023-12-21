@@ -161,7 +161,7 @@ async function processAddConfirmation(studentName) {
                   const encodedStudentName = encodeURIComponent(studentName);
                   log(encodedStudentName);
                   await ndefWrite.write(
-                    `Unique Number: ${uniqueNumber}, Student Name: ${studentName}, URL: http://10.171.171.52:4200/coins-history/student/all/${encodedStudentName}/${uniqueNumber}`
+                    `Unique Number: ${uniqueNumber}, Student Name: ${studentName}, URL: https://live.olevels.com/coins-history/student/all/${encodedStudentName}/${uniqueNumber}`
                   );
   
                   log("Message written successfully.");
@@ -414,13 +414,12 @@ function submitAdditionalInfo() {
     });
 }
 async function viewInformation() {
-    // Get the name and topic from the URL
     const urlSearchParams = new URLSearchParams(window.location.search);
     const nameFromUrl = urlSearchParams.get('name'); 
     const topicFromUrl = urlSearchParams.get('topic'); 
 
     if (!nameFromUrl || !topicFromUrl) {
-      console.log("Name or topic not found in the URL");
+      console.log("You are not allowed. Only teachers are allowed to perform this action.");
       return;
     }
 

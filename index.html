@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
     <link rel="stylesheet" href="styles.css" />
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
   </head>
 
   <body>
@@ -42,6 +43,8 @@
       <p><strong>Address:</strong> <span id="modalAddress"></span></p>
       <p><strong>ImageUrl:</strong> <span id="modalImgUrl"></span></p>
       <img id="modalStudentImage" style="max-width: 100%; max-height: 200px; margin-top: 10px"/>
+    </br>
+      <button style="margin-top: 10px;" onclick="copyToClipboard()">Copy Information</button>
     </div>
     <div id="passwordModal">
       <label for="passwordInput">Enter your password:</label>

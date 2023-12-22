@@ -30,13 +30,6 @@ log = ChromeSamples.log;
 if (!("NDEFReader" in window))
   ChromeSamples.setStatus("Web NFC is not available. Use Chrome on Android.");
 
-//   document.addEventListener('DOMContentLoaded', function () {
-//     console.log('DOM is loaded');
-//     const studentNameInput = document.getElementById('studentName');
-
-//     studentNameInput.value = '';
-
-// });
 scanButton.addEventListener("click", async () => {
   log("User clicked scan button");
 
@@ -297,23 +290,24 @@ function openRacingCar() {
   window.open("racing-car.html", "_blank");
 }
 async function fetchCoinsForActivity(activity) {
-    const snapshot = await firebase.database().ref(`ActivityCoins/${activity}`).once('value');
-    return snapshot.val() || 0;
-  }
+  const snapshot = await firebase
+    .database()
+    .ref(`ActivityCoins/${activity}`)
+    .once("value");
+  return snapshot.val() || 0;
+}
 async function updateButton(activity, buttonId) {
-    const coins = await fetchCoinsForActivity(activity);
-    document.getElementById(buttonId).innerText = `${activity} (${coins} Coins)`;
-  }
-  
-  // Event listener when the DOM is fully loaded
-  document.addEventListener('DOMContentLoaded', async function () {
-    // Update each button with activity coins
-    await updateButton('Cricket Ground', 'cricketButton');
-    await updateButton('Play ground', 'playButton');
-    await updateButton('Big Slide', 'bigButton');
-    await updateButton('Swimming Pool', 'swimmingButton');
-    await updateButton('Racing Car', 'racingButton');
-  });
+  const coins = await fetchCoinsForActivity(activity);
+  document.getElementById(buttonId).innerText = `${activity} (${coins} Coins)`;
+}
+
+document.addEventListener("DOMContentLoaded", async function () {
+  await updateButton("Cricket Ground", "cricketButton");
+  await updateButton("Play ground", "playButton");
+  await updateButton("Big Slide", "bigButton");
+  await updateButton("Swimming Pool", "swimmingButton");
+  await updateButton("Racing Car", "racingButton");
+});
 
 function setCoins(activityName) {
   const password = prompt("Enter your password:");
@@ -358,38 +352,37 @@ async function getNFCSerialNumber() {
   });
 }
 function openAdditionalInfoForm() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const studentNameinUrl = urlParams.get("name");
-  
-    if (studentNameinUrl) {
-      document.getElementById("additionalInfoForm").style.display = "block";
-      document.getElementById("modalContent").style.display = "block";
-    } else {
-      const passwordModal = document.getElementById("passwordModal");
-      passwordModal.style.display = "block";
-  
-      const passwordInput = document.getElementById("passwordInput");
-      const submitButton = document.getElementById("submitPassword");
-      const cancelButton = document.getElementById("cancelPassword");
-  
-      cancelButton.addEventListener("click", function () {
-        passwordModal.style.display = "none";
-      });
-  
-      submitButton.addEventListener("click", function () {
-        const enteredPassword = passwordInput.value;
-        const teacherPassword = "password";
-  
-        if (enteredPassword === teacherPassword) {
-            document.getElementById("passwordModal").style.display = "none";
-          document.getElementById("studentNameContainer").style.display = "block";
-        } else {
-          alert("You are not a teacher. Access denied.");
-        }
-      });
-    }
+  const urlParams = new URLSearchParams(window.location.search);
+  const studentNameinUrl = urlParams.get("name");
+
+  if (studentNameinUrl) {
+    document.getElementById("additionalInfoForm").style.display = "block";
+    document.getElementById("modalContent").style.display = "block";
+  } else {
+    const passwordModal = document.getElementById("passwordModal");
+    passwordModal.style.display = "block";
+
+    const passwordInput = document.getElementById("passwordInput");
+    const submitButton = document.getElementById("submitPassword");
+    const cancelButton = document.getElementById("cancelPassword");
+
+    cancelButton.addEventListener("click", function () {
+      passwordModal.style.display = "none";
+    });
+
+    submitButton.addEventListener("click", function () {
+      const enteredPassword = passwordInput.value;
+      const teacherPassword = "password";
+
+      if (enteredPassword === teacherPassword) {
+        document.getElementById("passwordModal").style.display = "none";
+        document.getElementById("studentNameContainer").style.display = "block";
+      } else {
+        alert("You are not a teacher. Access denied.");
+      }
+    });
   }
-  
+}
 
 function closeAdditionalInfoForm() {
   document.getElementById("additionalInfoForm").style.display = "none";
@@ -419,34 +412,34 @@ function previewImage() {
   }
 }
 async function fetchStudentNames() {
-    const database = firebase.database();
-    const studentsRef = database.ref("students");
+  const database = firebase.database();
+  const studentsRef = database.ref("students");
 
-    try {
-        const snapshot = await studentsRef.once("value");
-        const studentNames = Object.keys(snapshot.val() || {});
+  try {
+    const snapshot = await studentsRef.once("value");
+    const studentNames = Object.keys(snapshot.val() || {});
 
-        const dropdown1 = document.getElementById("studentNameDropdown");
-        const dropdown2 = document.getElementById("studentNameDropdownInfo");
+    const dropdown1 = document.getElementById("studentNameDropdown");
+    const dropdown2 = document.getElementById("studentNameDropdownInfo");
 
-        dropdown1.innerHTML = "";
-        dropdown2.innerHTML = "";
+    dropdown1.innerHTML = "";
+    dropdown2.innerHTML = "";
 
-        studentNames.forEach((name) => {
-            const option1 = document.createElement("option");
-            const option2 = document.createElement("option");
+    studentNames.forEach((name) => {
+      const option1 = document.createElement("option");
+      const option2 = document.createElement("option");
 
-            option1.value = name;
-            option1.text = name;
-            dropdown1.appendChild(option1);
+      option1.value = name;
+      option1.text = name;
+      dropdown1.appendChild(option1);
 
-            option2.value = name;
-            option2.text = name;
-            dropdown2.appendChild(option2);
-        });
-    } catch (error) {
-        console.error("Error fetching student names:", error.message);
-    }
+      option2.value = name;
+      option2.text = name;
+      dropdown2.appendChild(option2);
+    });
+  } catch (error) {
+    console.error("Error fetching student names:", error.message);
+  }
 }
 
 fetchStudentNames();
@@ -454,10 +447,12 @@ fetchStudentNames();
 function submitAdditionalInfo() {
   const urlParams = new URLSearchParams(window.location.search);
   const studentNameinUrl = urlParams.get("name");
+  const topic = urlParams.get("topic")
 
-  if (studentNameinUrl) {
+  if (studentNameinUrl && topic) {
     submitAdditionalInfoModal(studentNameinUrl);
-  } else {
+  }
+  else {
     const studentNameDropdown = document.getElementById("studentNameDropdown");
     studentName = studentNameDropdown.value.trim();
     submitAdditionalInfoModal(studentName);
@@ -465,7 +460,6 @@ function submitAdditionalInfo() {
 }
 
 function submitAdditionalInfoModal(studentName) {
-
   if (!studentName) {
     alert("Please select a valid student name.");
     return;
@@ -492,31 +486,40 @@ function submitAdditionalInfoModal(studentName) {
     alert("Please select an image.");
     return;
   }
+
   const storageRef = firebase.storage().ref(`student_images/${studentName}`);
 
-  storageRef
-    .put(image)
+  storageRef.put(image)
     .then(() => {
-      storageRef
-        .getDownloadURL()
+      storageRef.getDownloadURL()
         .then((imageUrl) => {
           const database = firebase.database();
           const studentsRef = database.ref(`students/${studentName}`);
-          studentsRef
-            .update({
-              bloodGroup: bloodGroup,
-              address: address,
-              imageUrl: imageUrl,
-            })
+
+          studentsRef.update({
+            bloodGroup: bloodGroup,
+            address: address,
+            imageUrl: imageUrl,
+          })
             .then(() => {
               alert("Additional information submitted successfully.");
               closeAdditionalInfoForm();
+              const urlParams = new URLSearchParams(window.location.search);
+  const studentNameinUrl = urlParams.get("name");
+  const topic = urlParams.get("topic")
+              
+              if(studentNameinUrl) {
+              window.location.reload();
+              }
+              else {
+                const newUrl = window.location.href + "?name=" + encodeURIComponent(studentName);
+              window.open(newUrl, "_blank");
+              window.location.reload();
+              }
+              
             })
             .catch((error) => {
-              console.error(
-                "Error updating student information:",
-                error.message
-              );
+              console.error("Error updating student information:", error.message);
             });
         })
         .catch((error) => {
@@ -527,49 +530,49 @@ function submitAdditionalInfoModal(studentName) {
       console.error("Error uploading image:", error.message);
     });
 }
-async function fetchStudentDetails(studentName) {
-    const database = firebase.firestore(); 
-    const studentsRef = database.collection("students");
-  
-    try {
-      const querySnapshot = await studentsRef.where("name", "==", studentName).get();
 
-      if (!querySnapshot.empty) {
-        const studentDoc = querySnapshot.docs[0].data();
-        if (Array.isArray(studentDoc.topics) && studentDoc.topics.length > 0) {
-          const firstTopic = studentDoc.topics[0].topic !== undefined ? studentDoc.topics[0].topic : null;
-          const numbersArray = studentDoc.numbers || [];
-          return {
-              id: studentDoc.id,
-              firstTopic: firstTopic,
-              numbers: numbersArray,
-          };
-        } else {
-          return null;
-        }
+async function fetchStudentDetails(studentName) {
+  const database = firebase.firestore();
+  const studentsRef = database.collection("students");
+
+  try {
+    const querySnapshot = await studentsRef
+      .where("name", "==", studentName)
+      .get();
+
+    if (!querySnapshot.empty) {
+      const studentDoc = querySnapshot.docs[0].data();
+      if (Array.isArray(studentDoc.topics) && studentDoc.topics.length > 0) {
+        const firstTopic =
+          studentDoc.topics[0].topic !== undefined
+            ? studentDoc.topics[0].topic
+            : null;
+        const numbersArray = studentDoc.numbers || [];
+        return {
+          id: studentDoc.id,
+          firstTopic: firstTopic,
+          numbers: numbersArray,
+        };
       } else {
         return null;
       }
-    } catch (error) {
-      console.error("Error fetching student details:", error.message);
-      throw error;
+    } else {
+      return null;
     }
+  } catch (error) {
+    console.error("Error fetching student details:", error.message);
+    throw error;
+  }
 }
 
-
 async function viewInformation() {
-    const urlSearchParams = new URLSearchParams(window.location.search);
-    const nameFromUrl = urlSearchParams.get("name");
-    const topicFromUrl = urlSearchParams.get("topic");
-    const id = urlSearchParams.get("id");
-    
-  
-    if (nameFromUrl) {
-        const studentSnapshot = await firebase
-      .database()
-      .ref(`students/${nameFromUrl}`)
-      .once("value");
-    const studentInfo = studentSnapshot.val();
+  const urlSearchParams = new URLSearchParams(window.location.search);
+  const nameFromUrl = urlSearchParams.get("name");
+  const topicFromUrl = urlSearchParams.get("topic");
+  const id = urlSearchParams.get("id");
+  console.log("nameFromUrl:", nameFromUrl);
+
+  if (topicFromUrl && id) {
     const contactSnapshot = await firebase
       .database()
       .ref(
@@ -592,59 +595,168 @@ async function viewInformation() {
     const contactNumber = contactSnapshot.val();
     const fatherNumber = fatherSnapshot.val();
     const motherNumber = motherSnapshot.val();
-    if(studentInfo) {viewInformationDetails(nameFromUrl, topicFromUrl , id , contactNumber ,fatherNumber ,motherNumber);}
-      
-    } else {
-      const passwordModal = document.getElementById("passwordModal");
-      passwordModal.style.display = "block";
-  
-      const passwordInput = document.getElementById("passwordInput");
-      const submitButton = document.getElementById("submitPassword");
-      const cancelButton = document.getElementById("cancelPassword");
-  
-      cancelButton.addEventListener("click", function () {
-        passwordModal.style.display = "none";
-      });
-  
-      submitButton.addEventListener("click", async function () {
-        const enteredPassword = passwordInput.value;
-        const teacherPassword = "password";
-  
-        if (enteredPassword === teacherPassword) {
-            passwordModal.style.display = "none";
-          document.getElementById("studentNameInfo").style.display = "block";
+    if (contactSnapshot) {
+      viewInformationDetails(
+        nameFromUrl,
+        topicFromUrl,
+        id,
+        contactNumber,
+        fatherNumber,
+        motherNumber
+      );
+    }
+  } else if (nameFromUrl) {
+    const database = firebase.firestore();
+    const studentsRef = database.collection("students");
+
+    try {
+      const querySnapshot = await studentsRef
+        .where("name", "==", nameFromUrl)
+        .get();
+
+      if (!querySnapshot.empty) {
+        const studentDoc = querySnapshot.docs[0].data();
+        if (Array.isArray(studentDoc.topics) && studentDoc.topics.length > 0) {
+          const firstTopic =
+            studentDoc.topics[0].topic !== undefined
+              ? studentDoc.topics[0].topic
+              : null;
+          const numbersArray = studentDoc.numbers || [];
+
+          const studentDetails = {
+            id: studentDoc.id,
+            firstTopic: firstTopic,
+            numbers: numbersArray,
+          };
+
+          const studentTopic = studentDetails.firstTopic;
+          const studentId = studentDetails.id;
+          const studentNumbers = studentDetails.numbers || [
+            "N/A",
+            "N/A",
+            "N/A",
+          ];
+          const [contact, fatherPhone, motherPhone] = studentNumbers;
+
+          viewInformationDetails(
+            nameFromUrl,
+            studentTopic,
+            studentId,
+            contact,
+            fatherPhone,
+            motherPhone
+          );
         } else {
-          alert("You are not a teacher. Access denied.");
+          alert("No topic data found");
         }
-      });
+      } else {
+        alert("No data found");
+      }
+    } catch (error) {
+      console.error("Error fetching student details:", error.message);
+      alert("Error fetching student details. Please try again.");
     }
+  } else {
+    const passwordModal = document.getElementById("passwordModal");
+    passwordModal.style.display = "block";
+
+    const passwordInput = document.getElementById("passwordInput");
+    const submitButton = document.getElementById("submitPassword");
+    const cancelButton = document.getElementById("cancelPassword");
+
+    cancelButton.addEventListener("click", function () {
+      passwordModal.style.display = "none";
+    });
+
+    submitButton.addEventListener("click", async function () {
+      const enteredPassword = passwordInput.value;
+      const teacherPassword = "password";
+
+      if (enteredPassword === teacherPassword) {
+        passwordModal.style.display = "none";
+        document.getElementById("studentNameInfo").style.display = "block";
+      } else {
+        alert("You are not a teacher. Access denied.");
+      }
+    });
   }
+}
 
-  async function fetchStudentDetailsFromFirestore() {
-    const studentNameDropdown = document.getElementById("studentNameDropdownInfo");
-    studentName = studentNameDropdown.value.trim();
-    const studentDetails = await fetchStudentDetails(studentName);
+async function fetchStudentDetailsFromFirestore() {
+  const studentNameDropdown = document.getElementById(
+    "studentNameDropdownInfo"
+  );
+  studentName = studentNameDropdown.value.trim();
+  const studentDetails = await fetchStudentDetails(studentName);
 
-    if (studentDetails) {
-        const studentTopic = studentDetails.firstTopic;
-        const studentId = studentDetails.id;
-        const studentNumbers = studentDetails.numbers || ["N/A", "N/A", "N/A"];
-const [contact, fatherPhone, motherPhone] = studentNumbers;
+  if (studentDetails) {
+    const studentTopic = studentDetails.firstTopic;
+    const studentId = studentDetails.id;
+    const studentNumbers = studentDetails.numbers || ["N/A", "N/A", "N/A"];
+    const [contact, fatherPhone, motherPhone] = studentNumbers;
 
-console.log("Contact:", contact);
-console.log("Father Phone:", fatherPhone);
-console.log("Mother Phone:", motherPhone);
-
-// Send each number as a separate argument to the function
-viewInformationDetails(studentName, studentTopic, studentId, contact, fatherPhone, motherPhone);
-    } else {
-      alert("Student not found in the database.");
-    }
-
+    viewInformationDetails(
+      studentName,
+      studentTopic,
+      studentId,
+      contact,
+      fatherPhone,
+      motherPhone
+    );
+  } else {
+    alert("No data found");
   }
-  
+}
 
-async function viewInformationDetails(nameFromUrl, topicFromUrl , id , contactNumber ,fatherNumber ,motherNumber) {
+function copyToClipboard() {
+  var infoToCopy = getStudentInfo();
+
+  var tempElement = document.createElement("textarea");
+  tempElement.value = infoToCopy;
+  document.body.appendChild(tempElement);
+  tempElement.select();
+  document.execCommand("copy");
+  document.body.removeChild(tempElement);
+
+  alert("Information copied to clipboard!");
+}
+
+function getStudentInfo() {
+  var name = $("#modalStudentName").text();
+  var bloodGroup = $("#modalBloodGroup").text();
+  var contact = $("#modalContact").text();
+  var father = $("#modalFather").text();
+  var mother = $("#modalMother").text();
+  var address = $("#modalAddress").text();
+  var imageUrl = $("#modalImgUrl").text();
+
+  // Construct the information string
+  var infoToCopy =
+    "Name: " +
+    name +
+    "\nBlood Group: " +
+    bloodGroup +
+    "\nContact: " +
+    contact +
+    "\nFather: " +
+    father +
+    "\nMother: " +
+    mother +
+    "\nAddress: " +
+    address +
+    "\nImageUrl: " +
+    imageUrl;
+
+  return infoToCopy;
+}
+async function viewInformationDetails(
+  nameFromUrl,
+  topicFromUrl,
+  id,
+  contactNumber,
+  fatherNumber,
+  motherNumber
+) {
   if (!nameFromUrl || !topicFromUrl) {
     console.log("Name or topic not found in the URL");
     return;
@@ -657,7 +769,9 @@ async function viewInformationDetails(nameFromUrl, topicFromUrl , id , contactNu
       .once("value");
     const studentInfo = studentSnapshot.val();
     if (studentInfo) {
-      document.getElementById("modalStudentName").innerText = `${nameFromUrl} (${id})`;
+      document.getElementById(
+        "modalStudentName"
+      ).innerText = `${nameFromUrl} (${id})`;
       document.getElementById("modalBloodGroup").innerText =
         studentInfo.bloodGroup || "N/A";
       document.getElementById("modalContact").innerText =
@@ -673,7 +787,7 @@ async function viewInformationDetails(nameFromUrl, topicFromUrl , id , contactNu
 
       document.getElementById("infoDisplay").style.display = "block";
     } else {
-      alert("Student not found in Firebase");
+      alert("No data found");
     }
   } catch (error) {
     console.error("Error fetching data from Firebase:", error);

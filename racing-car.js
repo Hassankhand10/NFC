@@ -26,6 +26,15 @@ var ChromeSamples = {
   };
   
   log = ChromeSamples.log;
+
+  
+  function clearLogContent() {
+    var logElement = document.getElementById("log");
+    logElement.innerText = ""; 
+  }
+  
+  // Set an interval to clear the log content every 24 hours
+  setInterval(clearLogContent, 24 * 60 * 60 * 1000);
   
   if (!("NDEFReader" in window))
     ChromeSamples.setStatus("Web NFC is not available. Use Chrome on Android.");

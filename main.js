@@ -27,6 +27,15 @@ var ChromeSamples = {
 
 log = ChromeSamples.log;
 
+
+function clearLogContent() {
+  var logElement = document.getElementById("log");
+  logElement.innerText = ""; 
+}
+
+// Set an interval to clear the log content every 24 hours
+setInterval(clearLogContent, 24 * 60 * 60 * 1000);
+
 document.addEventListener('DOMContentLoaded', function() {
   // Get the "name" parameter from the URL
   const urlSearchParams = new URLSearchParams(window.location.search);

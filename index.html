@@ -5,14 +5,16 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=43" />
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
   </head>
 
   <body>
     <h3>Actions With NFC</h3>
+    <h4 id="studentNameHeader"></h4>
     <button id="scanButton">Scan</button>
     <button id="writeButton" onclick="writeButtonClick()">Write</button>
+    <button id="makeReadOnlyButton" onclick="makeReadOnly()">Make Read-Only</button>
     <button id="additionalInfoButton" onclick="openAdditionalInfoForm()">
       Add Additional Information
     </button>
@@ -158,6 +160,6 @@
     <script src="https://www.gstatic.com/firebasejs/7.24.0/firebase-firestore.js"></script>
     <script src="constants.js"></script>
     <script src="firebase-config.js"></script>
-    <script src="main.js"></script>
+    <script src="main.js?v=43"></script>
   </body>
 </html>

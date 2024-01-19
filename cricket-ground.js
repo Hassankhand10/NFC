@@ -1,3 +1,35 @@
+var ChromeSamples = {
+  log: function () {
+    var line = Array.prototype.slice
+      .call(arguments)
+      .map(function (argument) {
+        return typeof argument === "string"
+          ? argument
+          : JSON.stringify(argument);
+      })
+      .join(" ");
+
+    document.querySelector("#log").textContent += line + "\n";
+  },
+
+  setStatus: function (status) {
+    document.querySelector("#status").textContent = status;
+  },
+
+  setContent: function (newContent) {
+    var content = document.querySelector("#content");
+    while (content.hasChildNodes()) {
+      content.removeChild(content.lastChild);
+    }
+    content.appendChild(newContent);
+  },
+};
+
+log = ChromeSamples.log;
+
+if (!("NDEFReader" in window))
+  ChromeSamples.setStatus("Web NFC is not available. Use Chrome on Android.");
+
 document.addEventListener("DOMContentLoaded", async function () {
   try {
     await fetchAndDisplayEntryLogs("Cricket Ground");
@@ -5,7 +37,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     ndef.scan();
 
     ndef.addEventListener("readingerror", () => {
-      alert("Error reading from the NFC tag. Try again.");
+      log("Error reading from the NFC tag. Try again.");
     });
 
     ndef.addEventListener("reading", async ({ message }) => {
@@ -17,35 +49,37 @@ document.addEventListener("DOMContentLoaded", async function () {
         const studentName = studentNameMatch
           ? studentNameMatch[1]
           : "Student Name not found";
-
-        const coinsWallet = await getCoinsWalletFromFirebase(studentName);
-        const activityCoins = await getCoinsForActivityFromFirebase(
-          "Cricket Ground"
-        );
-
-        if (coinsWallet >= activityCoins) {
-          const previousCoins = coinsWallet;
-          const updatedCoins = previousCoins - activityCoins;
-          await updateCoinsWalletInFirebase(studentName, updatedCoins);
-          await storeEntryLogInFirebase(studentName, "Cricket Ground");
-          
-          alert(
-            `Welcome to ${
-              document.getElementById("activityName").textContent
-            }! You have been charged ${activityCoins} coins.\nPrevious Balance: ${previousCoins} coins\nCurrent Balance: ${updatedCoins} coins`
-          );
+    
+        if (studentName !== "Student Name not found") {
+          const coinsWallet = await getCoinsWalletFromFirebase(studentName);
+          const activityCoins = await getCoinsForActivityFromFirebase("Cricket Ground");
+    
+          if (coinsWallet >= activityCoins) {
+            const previousCoins = coinsWallet;
+            const updatedCoins = previousCoins - activityCoins;
+            await updateCoinsWalletInFirebase(studentName, updatedCoins);
+            await storeEntryLogInFirebase(studentName, "Cricket Ground");
+    
+            log(
+              `Welcome to ${
+                document.getElementById("activityName").textContent
+              }! You have been charged ${activityCoins} coins.\nPrevious Balance: ${previousCoins} coins\nCurrent Balance: ${updatedCoins} coins`
+            );
+          } else {
+            log(
+              `Sorry, ${studentName}. You don't have enough coins to enter ${
+                document.getElementById("activityName").textContent
+              }. Your current coin balance is ${coinsWallet}.`
+            );
+          }
+    
+          ndef.stop();
         } else {
-          alert(
-            `Sorry, ${studentName}. You don't have enough coins to enter ${
-              document.getElementById("activityName").textContent
-            }. Your current coin balance is ${coinsWallet}.`
-          );
+          log("Student not found in the NFC message.");
         }
-
-        ndef.stop();
       }
     });
-
+    
     const initialCoinsRequired = await getCoinsForActivityFromFirebase(
       "Cricket Ground"
     );

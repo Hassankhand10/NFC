@@ -27,6 +27,31 @@ var ChromeSamples = {
 
 log = ChromeSamples.log;
 
+document.addEventListener('DOMContentLoaded', function() {
+  // Get the "name" parameter from the URL
+  const urlSearchParams = new URLSearchParams(window.location.search);
+  const studentName = urlSearchParams.get("name");
+  
+  // Log the extracted name for debugging
+  console.log("Student Name:", studentName);
+
+  // Get the heading element by its ID
+  const studentNameHeaderElement = document.getElementById('studentNameHeader');
+
+  // Check if the element exists and the name is available
+  if (studentNameHeaderElement && studentName) {
+    // Set the text content of the heading element
+    studentNameHeaderElement.textContent = `${studentName}!`;
+  } else {
+    // Log a message if the element is not found or the name is not available
+    console.log("Element not found or student name is not available.");
+  }
+});
+
+
+
+
+
 if (!("NDEFReader" in window))
   ChromeSamples.setStatus("Web NFC is not available. Use Chrome on Android.");
 
@@ -109,10 +134,25 @@ function processStudentName(studentName) {
   }
 }
 
+async function makeReadOnly() {
+  log("User clicked make read-only button");
+
+  try {
+    const ndef = new NDEFReader();
+    await ndef.scan();
+    await ndef.makeReadOnly();
+    log("> NFC tag has been made permanently read-only");
+  } catch (error) {
+    log("Argh! " + error);
+  }
+}
+
 async function processAddConfirmation(studentName) {
   if (!("NDEFReader" in window)) {
     alert("Web NFC is not available. Use Chrome on Android.");
+    return;
   }
+
   try {
     const ndef = new NDEFReader();
     await ndef.scan();
@@ -142,19 +182,23 @@ async function processAddConfirmation(studentName) {
             try {
               const ndefWrite = new NDEFReader();
               const encodedStudentName = encodeURIComponent(studentName);
-              log(encodedStudentName);
-              await ndefWrite.write(
-                `Unique Number: ${uniqueNumber}, Student Name: ${studentName}, URL: https://live.olevels.com/coins-history/student/all/${encodedStudentName}/${uniqueNumber}`
-              );
+              const messageText = `Unique Number: ${uniqueNumber}, Student Name: ${studentName}`;
+              const messageUrl = `https://live.olevels.com/coins-history/student/all/${encodedStudentName}/${uniqueNumber}`;
 
-              log("Message written successfully.");
-              log(`Data updated for student: ${studentName}`);
+              await ndefWrite.write({
+                records: [
+                  { recordType: "url", data: messageUrl },
+                  { recordType: "text", data: messageText },
+                ],
+              });
+
+              log(`Message written successfully for ${studentName}.`);
               await studentsRef.child(studentName).update({
                 uniqueNumber: uniqueNumber,
                 serialNumber: nfcSerialNumber,
               });
-            } catch (error) {
-              log(`Write failed: ${error}`);
+            } catch (writeError) {
+              log(`Write failed: ${writeError}`);
             }
           } else {
             alert(
@@ -164,13 +208,17 @@ async function processAddConfirmation(studentName) {
         } else {
           alert(`Student with name '${studentName}' not found.`);
         }
-      } catch (error) {
-        log("Error checking student name:", error.message);
+      } catch (readError) {
+        log("Error checking student name:", readError.message);
+        // Provide user feedback about database read error
+        alert("Error checking student name. Please try again.");
       }
     });
-  } catch (error) {
-    log("Argh! " + error);
+  } catch (nfcError) {
+    log(`Argh! ${nfcError}`);
     document.getElementById("addModal").style.display = "none";
+    // Provide user feedback about NFC error
+    alert("Error initializing NFC. Please try again.");
   }
 }
 
@@ -447,12 +495,11 @@ fetchStudentNames();
 function submitAdditionalInfo() {
   const urlParams = new URLSearchParams(window.location.search);
   const studentNameinUrl = urlParams.get("name");
-  const topic = urlParams.get("topic")
+  const topic = urlParams.get("topic");
 
   if (studentNameinUrl && topic) {
     submitAdditionalInfoModal(studentNameinUrl);
-  }
-  else {
+  } else {
     const studentNameDropdown = document.getElementById("studentNameDropdown");
     studentName = studentNameDropdown.value.trim();
     submitAdditionalInfoModal(studentName);
@@ -489,37 +536,44 @@ function submitAdditionalInfoModal(studentName) {
 
   const storageRef = firebase.storage().ref(`student_images/${studentName}`);
 
-  storageRef.put(image)
+  storageRef
+    .put(image)
     .then(() => {
-      storageRef.getDownloadURL()
+      storageRef
+        .getDownloadURL()
         .then((imageUrl) => {
           const database = firebase.database();
           const studentsRef = database.ref(`students/${studentName}`);
 
-          studentsRef.update({
-            bloodGroup: bloodGroup,
-            address: address,
-            imageUrl: imageUrl,
-          })
+          studentsRef
+            .update({
+              bloodGroup: bloodGroup,
+              address: address,
+              imageUrl: imageUrl,
+            })
             .then(() => {
               alert("Additional information submitted successfully.");
               closeAdditionalInfoForm();
               const urlParams = new URLSearchParams(window.location.search);
-  const studentNameinUrl = urlParams.get("name");
-  const topic = urlParams.get("topic")
-              
-              if(studentNameinUrl) {
-              window.location.reload();
+              const studentNameinUrl = urlParams.get("name");
+              const topic = urlParams.get("topic");
+
+              if (studentNameinUrl) {
+                window.location.reload();
+              } else {
+                const newUrl =
+                  window.location.href +
+                  "?name=" +
+                  encodeURIComponent(studentName);
+                window.open(newUrl, "_blank");
+                window.location.reload();
               }
-              else {
-                const newUrl = window.location.href + "?name=" + encodeURIComponent(studentName);
-              window.open(newUrl, "_blank");
-              window.location.reload();
-              }
-              
             })
             .catch((error) => {
-              console.error("Error updating student information:", error.message);
+              console.error(
+                "Error updating student information:",
+                error.message
+              );
             });
         })
         .catch((error) => {
